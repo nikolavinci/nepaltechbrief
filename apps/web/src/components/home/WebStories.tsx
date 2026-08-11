@@ -1,8 +1,6 @@
 import Link from 'next/link';
 
-export function WebStories({ lang, articles }: { lang: string, articles: any[] }) {
-  const isEn = lang === 'en';
-  
+export function WebStories({ articles }: { articles: any[] }) {
   if (!articles || articles.length === 0) return null;
 
   const getImageUrl = (article: any) => {
@@ -12,7 +10,7 @@ export function WebStories({ lang, articles }: { lang: string, articles: any[] }
   };
 
   const getTitle = (article: any) => {
-    return isEn ? article.title_en : (article.title_np || article.title_en);
+    return article.title_np || article.title_en;
   };
 
   return (
@@ -20,10 +18,10 @@ export function WebStories({ lang, articles }: { lang: string, articles: any[] }
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-3xl font-extrabold text-foreground uppercase tracking-tight flex items-center gap-2">
           <span className="w-4 h-4 bg-gradient-to-tr from-pink-500 to-orange-500 inline-block rounded-full animate-pulse"></span>
-          {isEn ? 'Web Stories' : 'वेब स्टोरी'}
+          वेब स्टोरी
         </h2>
-        <Link href={`/${lang}/web-stories`} className="text-sm font-semibold hover:underline">
-          {isEn ? 'View All →' : 'सबै हेर्नुहोस् →'}
+        <Link href={`/web-stories`} className="text-sm font-semibold hover:underline">
+          सबै हेर्नुहोस् →
         </Link>
       </div>
 
@@ -34,7 +32,7 @@ export function WebStories({ lang, articles }: { lang: string, articles: any[] }
 
           return (
             <Link 
-              href={`/${lang}/news/${article.slug}`} 
+              href={`/news/${article.slug}`} 
               key={article.id} 
               className="group relative flex-shrink-0 w-40 sm:w-48 lg:w-56 aspect-[9/16] rounded-xl overflow-hidden snap-start shadow-sm hover:shadow-xl transition-all"
             >
@@ -46,7 +44,7 @@ export function WebStories({ lang, articles }: { lang: string, articles: any[] }
               <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
               <div className="absolute bottom-0 left-0 right-0 p-4">
                 <span className="bg-primary text-primary-foreground text-[10px] font-bold uppercase px-2 py-0.5 rounded mb-2 inline-block">
-                  {isEn ? article.category?.name_en : article.category?.name_np}
+                  {article.category?.name_np}
                 </span>
                 <h3 className="text-white font-bold text-sm sm:text-base leading-tight group-hover:text-primary transition-colors line-clamp-3">
                   {getTitle(article)}
