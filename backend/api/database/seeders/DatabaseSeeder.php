@@ -15,6 +15,8 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
+        $this->call(SuperAdminSeeder::class);
+        
         $user = \App\Models\User::factory()->create([
             'name' => 'Anil Bhattarai',
             'email' => 'editor@neptechnews.com',
@@ -22,13 +24,6 @@ class DatabaseSeeder extends Seeder
             'role' => 'chief_editor'
         ]);
 
-        $categories = \App\Models\Category::factory(5)->create();
-
-        foreach ($categories as $category) {
-            \App\Models\Article::factory(10)->create([
-                'author_id' => $user->id,
-                'category_id' => $category->id,
-            ]);
-        }
+        // Don't create random categories and articles because SuperAdminSeeder already creates categories and news:sync creates articles.
     }
 }

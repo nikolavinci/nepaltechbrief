@@ -35,11 +35,11 @@ class SuperAdminSeeder extends Seeder
         }
         // --- Default Categories ---
         $categories = [
-            'technology' => ['en' => 'Technology', 'np' => 'प्रविधि'],
-            'business' => ['en' => 'Business', 'np' => 'व्यापार'],
-            'world' => ['en' => 'World', 'np' => 'विश्व'],
-            'sports' => ['en' => 'Sports', 'np' => 'खेलकुद'],
-            'national' => ['en' => 'National', 'np' => 'राष्ट्रिय'],
+            'tech-news' => ['en' => 'Tech News', 'np' => 'टेक न्युज'],
+            'gadgets' => ['en' => 'Gadgets', 'np' => 'ग्याजेट्स'],
+            'apps-software' => ['en' => 'Apps & Software', 'np' => 'एप्स र सफ्टवेयर'],
+            'telecom' => ['en' => 'Telecom', 'np' => 'टेलिकम'],
+            'startups' => ['en' => 'Startups', 'np' => 'स्टार्टअप'],
         ];
 
         $categoryIds = [];
@@ -54,18 +54,10 @@ class SuperAdminSeeder extends Seeder
         // --- Default RSS Feeds ---
         if (\Illuminate\Support\Facades\Schema::hasTable('rss_feeds') && \App\Models\RssFeed::count() === 0) {
             $defaultFeeds = [
-                ['name' => 'BBC Technology', 'url' => 'http://feeds.bbci.co.uk/news/technology/rss.xml', 'lang' => 'en', 'cat' => 'technology'],
-                ['name' => 'BBC Business', 'url' => 'http://feeds.bbci.co.uk/news/business/rss.xml', 'lang' => 'en', 'cat' => 'business'],
-                ['name' => 'BBC World', 'url' => 'http://feeds.bbci.co.uk/news/world/rss.xml', 'lang' => 'en', 'cat' => 'world'],
-                ['name' => 'BBC Sports', 'url' => 'http://feeds.bbci.co.uk/sport/rss.xml', 'lang' => 'en', 'cat' => 'sports'],
-                ['name' => 'OnlineKhabar', 'url' => 'https://www.onlinekhabar.com/feed', 'lang' => 'np', 'cat' => 'national'],
-                ['name' => 'OnlineKhabar English', 'url' => 'https://english.onlinekhabar.com/feed', 'lang' => 'en', 'cat' => 'national'],
-                ['name' => 'Nagarik News', 'url' => 'https://nagariknews.nagariknetwork.com/feed', 'lang' => 'np', 'cat' => 'national'],
-                ['name' => 'Ratopati', 'url' => 'https://www.ratopati.com/feed', 'lang' => 'np', 'cat' => 'national'],
-                ['name' => 'Telegraph Nepal', 'url' => 'https://www.telegraphnepal.com/feed/', 'lang' => 'en', 'cat' => 'national'],
-                ['name' => 'The Himalayan Times', 'url' => 'https://www.thehimalayantimes.com/rss', 'lang' => 'en', 'cat' => 'national'],
-                ['name' => 'Artha Sarokar', 'url' => 'https://arthasarokar.com/feed', 'lang' => 'np', 'cat' => 'business'],
-                ['name' => 'Techmandu', 'url' => 'https://techmandu.com/feed/', 'lang' => 'en', 'cat' => 'technology'],
+                ['name' => 'Techpana', 'url' => 'https://techpana.com/rss', 'lang' => 'np', 'cat' => 'tech-news'],
+                ['name' => 'TechnologyKhabar', 'url' => 'https://www.technologykhabar.com/feed/', 'lang' => 'np', 'cat' => 'tech-news'],
+                ['name' => 'TechPatro', 'url' => 'https://techpatro.com/feed/', 'lang' => 'np', 'cat' => 'tech-news'],
+                ['name' => 'ICTFrame', 'url' => 'https://np.ictframe.com/feed/', 'lang' => 'np', 'cat' => 'tech-news'],
             ];
 
             foreach ($defaultFeeds as $feed) {
