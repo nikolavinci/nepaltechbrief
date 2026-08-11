@@ -1,9 +1,6 @@
 import { NextResponse } from 'next/server';
 import { auth } from '@/auth';
 
-const locales = ['en', 'np'];
-const defaultLocale = 'en';
-
 export default auth((req) => {
   const { pathname } = req.nextUrl;
 
@@ -19,17 +16,8 @@ export default auth((req) => {
     return;
   }
 
-  // Check if the path is missing a locale
-  const pathnameIsMissingLocale = locales.every(
-    (locale) => !pathname.startsWith(`/${locale}/`) && pathname !== `/${locale}`
-  );
-
-  // Redirect to default locale if missing
-  if (pathnameIsMissingLocale) {
-    return NextResponse.redirect(
-      new URL(`/${defaultLocale}${pathname}`, req.url)
-    );
-  }
+  // Continue with other middleware logic (if any)
+  return;
 }) as any;
 
 export const config = {

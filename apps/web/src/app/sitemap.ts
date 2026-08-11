@@ -7,13 +7,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // Base URLs
   const sitemap: MetadataRoute.Sitemap = [
     {
-      url: `${baseUrl}/en`,
-      lastModified: new Date(),
-      changeFrequency: 'hourly',
-      priority: 1,
-    },
-    {
-      url: `${baseUrl}/np`,
+      url: `${baseUrl}`,
       lastModified: new Date(),
       changeFrequency: 'hourly',
       priority: 1,
@@ -24,16 +18,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     // Fetch all articles
     const { data: articles } = await fetchArticles(1, 100);
     
-    // Add EN and NP URLs for each article
+    // Add URLs for each article
     articles.forEach(article => {
       sitemap.push({
-        url: `${baseUrl}/en/news/${article.slug}`,
-        lastModified: new Date(article.updated_at || article.created_at || new Date()),
-        changeFrequency: 'daily',
-        priority: 0.8,
-      });
-      sitemap.push({
-        url: `${baseUrl}/np/news/${article.slug}`,
+        url: `${baseUrl}/news/${article.slug}`,
         lastModified: new Date(article.updated_at || article.created_at || new Date()),
         changeFrequency: 'daily',
         priority: 0.8,
@@ -44,13 +32,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     const categories = await fetchCategories();
     categories.forEach(category => {
       sitemap.push({
-        url: `${baseUrl}/en/category/${category.slug}`,
-        lastModified: new Date(),
-        changeFrequency: 'daily',
-        priority: 0.6,
-      });
-      sitemap.push({
-        url: `${baseUrl}/np/category/${category.slug}`,
+        url: `${baseUrl}/category/${category.slug}`,
         lastModified: new Date(),
         changeFrequency: 'daily',
         priority: 0.6,
