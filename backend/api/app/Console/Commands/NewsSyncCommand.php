@@ -53,7 +53,7 @@ class NewsSyncCommand extends Command
 
                 $count = 0;
                 foreach ($xml->channel->item as $item) {
-                    if ($count >= 10) break; // Fetch up to 10 per feed
+                    if ($count >= 50) break; // Fetch up to 50 per feed
                     $count++;
 
                     $title = (string) $item->title;
@@ -67,6 +67,10 @@ class NewsSyncCommand extends Command
                             $body = (string) $contentNamespace->encoded;
                         }
                     }
+
+                    // Strip "appeared first on" spam links
+                    $body = preg_replace('/<p[^>]*>\s*The post\s*<a[^>]*>.*?<\/a>\s*appeared first on\s*<a[^>]*>.*?<\/a>\.?\s*<\/p>/is', '', $body);
+                    $body = preg_replace('/The post\s*<a[^>]*>.*?<\/a>\s*appeared first on\s*<a[^>]*>.*?<\/a>\.?/is', '', $body);
                     
                     $slug = \Illuminate\Support\Str::slug($title);
 
@@ -95,26 +99,47 @@ class NewsSyncCommand extends Command
                                 'http' => ['header' => "User-Agent: Mozilla/5.0\r\n"]
                             ]);
                             $imageContent = file_get_contents($imageUrl, false, $imageContext);
+                            
                             if ($imageContent) {
-                                $image = @imagecreatefromstring($imageContent);
-                                if ($image) {
-                                    $filename = "{$slug}.webp";
-                                    $savePath = storage_path("app/public/articles/{$filename}");
-                                    
-                                    if (!is_dir(storage_path('app/public/articles'))) {
-                                        mkdir(storage_path('app/public/articles'), 0755, true);
+                                $uploadDir = storage_path('app/public/articles');
+                                if (!is_dir($uploadDir)) {
+                                    mkdir($uploadDir, 0755, true);
+                                }
+
+                                if (function_exists('imagecreatefromstring') && function_exists('imagewebp')) {
+                                    // Use GD to optimize and convert to WebP
+                                    $image = @imagecreatefromstring($imageContent);
+                                    if ($image) {
+                                        $filename = "{$slug}.webp";
+                                        $savePath = "{$uploadDir}/{$filename}";
+                                        imagewebp($image, $savePath, 80);
+                                        imagedestroy($image);
+                                        $localImagePath = "/storage/articles/{$filename}";
                                     }
-                                    
-                                    imagewebp($image, $savePath, 80);
-                                    imagedestroy($image);
+                                } else {
+                                    // Native raw download fallback if GD is missing (satisfies requirement)
+                                    // Extract original extension or default to jpg
+                                    $ext = pathinfo(parse_url($imageUrl, PHP_URL_PATH), PATHINFO_EXTENSION);
+                                    if (empty($ext) || !in_array(strtolower($ext), ['jpg', 'jpeg', 'png', 'gif', 'webp'])) {
+                                        $ext = 'jpg';
+                                    }
+                                    $filename = "{$slug}.{$ext}";
+                                    $savePath = "{$uploadDir}/{$filename}";
+                                    file_put_contents($savePath, $imageContent);
                                     $localImagePath = "/storage/articles/{$filename}";
                                 }
                             }
                         } catch (\Exception $e) {
-                            $this->warn("Failed to download or convert image for {$slug}: " . $e->getMessage());
-                            // Fallback to original URL if processing fails
+                            $this->warn("Failed to download or process image for {$slug}: " . $e->getMessage());
+                            // Absolute worst-case fallback to external URL
                             $localImagePath = $imageUrl; 
                         }
+                    }
+
+                    if (empty($localImagePath)) {
+                        $unsplashIds = ['1518770660439-4636190af475', '1451187580459-43490279c0fa', '1526304640581-d334cdbbf45e', '1504711434969-e33886168f5c', '1488590528505-98d2b5aba04b'];
+                        $randomId = $unsplashIds[array_rand($unsplashIds)];
+                        $localImagePath = "https://images.unsplash.com/photo-{$randomId}?q=80&w=2000&auto=format&fit=crop";
                     }
 
                     if (\App\Models\Article::where('slug', $slug)->exists()) {
@@ -122,16 +147,40 @@ class NewsSyncCommand extends Command
                     }
 
                     // To make it look "launch ready", we will default to published
+                    $titleNp = $title;
+                    $bodyNp = $body;
+                    
+                    if ($feed->lang === 'en') {
+                        $translatedTitle = $this->translateText($title);
+                        if ($translatedTitle) $titleNp = $translatedTitle;
+                        
+                        $translatedBody = $this->translateHtml($body);
+                        if ($translatedBody) $bodyNp = $translatedBody;
+                    }
+
+                    // Smart Keyword Auto-Categorization
+                    $checkText = strtolower($title . ' ' . $body);
+                    $autoCategoryId = $feed->category_id; // Default to feed category (Tech News)
+                    if (preg_match('/\b(startup|fund|investment|founder|entrepreneur|pitch|business)\b/i', $checkText) || preg_match('/(स्टार्टअप|लगानी|उद्यम|व्यापार)/u', $checkText)) {
+                        $autoCategoryId = 5; // Startups
+                    } elseif (preg_match('/\b(ncell|ntc|telecom|isp|vianet|cgnet|worldlink|dishhome|internet)\b/i', $checkText) || preg_match('/(एनसेल|एनटिसी|टेलिकम|इन्टरनेट)/u', $checkText)) {
+                        $autoCategoryId = 4; // Telecom
+                    } elseif (preg_match('/\b(app|software|ios|android|windows|update|application|game|feature)\b/i', $checkText) || preg_match('/(एप|सफ्टवेयर|गेम|एन्ड्रोइड|विन्डोज)/u', $checkText)) {
+                        $autoCategoryId = 3; // Apps & Software
+                    } elseif (preg_match('/\b(smartphone|laptop|mobile|samsung|apple|xiaomi|redmi|realme|vivo|oppo|tablet|watch|device|phone|gadget)\b/i', $checkText) || preg_match('/(स्मार्टफोन|ल्यापटप|मोबाइल|सामसङ|एप्पल|शाओमी|ग्याजेट)/u', $checkText)) {
+                        $autoCategoryId = 2; // Gadgets
+                    }
+
                     $articleData = [
                         'slug' => $slug,
                         'author_id' => $superAdmin->id,
-                        'category_id' => $feed->category_id,
+                        'category_id' => $autoCategoryId,
                         'status' => 'published',
                         'published_at' => now(),
-                        'title_en' => $feed->lang === 'en' ? $title : $title,
-                        'body_en' => $feed->lang === 'en' ? $body : $body,
-                        'title_np' => $feed->lang === 'np' ? $title : $title,
-                        'body_np' => $feed->lang === 'np' ? $body : $body,
+                        'title_en' => $title,
+                        'body_en' => $body,
+                        'title_np' => $titleNp,
+                        'body_np' => $bodyNp,
                         'featured_image' => $localImagePath,
                     ];
 
@@ -144,5 +193,40 @@ class NewsSyncCommand extends Command
         }
         
         $this->info('News Sync Complete!');
+    }
+
+    private function translateText($text)
+    {
+        if (empty(trim($text))) return $text;
+        $url = "https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=ne&dt=t&q=" . urlencode($text);
+        try {
+            $response = file_get_contents($url);
+            $json = json_decode($response, true);
+            $translatedText = '';
+            if (isset($json[0]) && is_array($json[0])) {
+                foreach ($json[0] as $segment) {
+                    if (isset($segment[0])) {
+                        $translatedText .= $segment[0];
+                    }
+                }
+            }
+            return $translatedText ?: null;
+        } catch (\Exception $e) {
+            return null;
+        }
+    }
+
+    private function translateHtml($html)
+    {
+        $text = strip_tags($html);
+        $chunks = str_split($text, 1500);
+        $translatedHtml = '';
+        foreach ($chunks as $chunk) {
+            $translated = $this->translateText($chunk);
+            if ($translated) {
+                $translatedHtml .= "<p>{$translated}</p>";
+            }
+        }
+        return $translatedHtml;
     }
 }
