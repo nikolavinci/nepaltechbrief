@@ -1,0 +1,11 @@
+:HL["/nepaltechbrief/_next/static/chunks/00mn8cbpo26n-.css","style"]
+:HL["/nepaltechbrief/_next/static/chunks/351xy-2vc-iuj.css","style"]
+:HL["/nepaltechbrief/_next/static/media/453f758e2ed7ecd1-s.p.00vnw57clamoq.woff2","font",{"crossOrigin":"","type":"font/woff2"}]
+:HL["/nepaltechbrief/_next/static/media/55ccc4e52c34800d-s.p.3rj_4-79y6dpx.woff2","font",{"crossOrigin":"","type":"font/woff2"}]
+:HL["/nepaltechbrief/_next/static/media/6782197c4d5dd6ad-s.p.1p-shbhruafvc.woff2","font",{"crossOrigin":"","type":"font/woff2"}]
+:HL["/nepaltechbrief/_next/static/media/83afe278b6a6bb3c-s.p.2bn3s6zvc0dyp.woff2","font",{"crossOrigin":"","type":"font/woff2"}]
+:HL["/nepaltechbrief/_next/static/media/aece6aa8c76f1323-s.p.2hihk8hezvzwi.woff2","font",{"crossOrigin":"","type":"font/woff2"}]
+:HL["/nepaltechbrief/_next/static/media/c346428b8b499e8a-s.p.3qdbhe3vu7ecv.woff2","font",{"crossOrigin":"","type":"font/woff2"}]
+:HL["/nepaltechbrief/_next/static/media/e92fa6abd9c612ef-s.p.30axz4qhm1rgm.woff2","font",{"crossOrigin":"","type":"font/woff2"}]
+:HL["/nepaltechbrief/_next/static/media/f1e720a33d6babe4-s.p.3_sihifhi5zdx.woff2","font",{"crossOrigin":"","type":"font/woff2"}]
+0:{"tree":{"name":"","param":null,"prefetchHints":4112,"slots":{"children":{"name":"category","param":null,"prefetchHints":4160,"slots":{"children":{"name":"slug","param":{"type":"d","key":"startups","siblings":[]},"prefetchHints":4192,"slots":{"children":{"name":"__PAGE__","param":null,"prefetchHints":4256,"slots":null}}}}}}},"staleTime":300,"buildId":"yBJaZOsFCX87ejQY1R7RM"}

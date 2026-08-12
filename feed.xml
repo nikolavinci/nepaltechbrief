@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>नेपटेकन्युज - नवीनतम प्रविधि समाचार</title>
+    <link>http://localhost:3000</link>
+    <description>नेपालको प्रमुख डिजिटल समाचार प्लेटफर्म जसमा प्रविधि, एआई, र स्टार्टअपका खबरहरू समावेश छन्।</description>
+    <language>ne-NP</language>
+    <lastBuildDate>Wed, 12 Aug 2026 19:57:15 GMT</lastBuildDate>
+    <atom:link href="http://localhost:3000/feed.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title><![CDATA[एक अप्रकाशित एन्थ्रोपिक मोडेलले गणितको सबैभन्दा ठूलो अनसुलझे समस्याहरू मध्ये एकमा प्रगति गर्यो]]></title>
+      <link>http://localhost:3000/news/an-unreleased-anthropic-model-made-progress-on-one-of-maths-biggest-unsolved-problems-techcrunch</link>
+      <guid isPermaLink="true">http://localhost:3000/news/an-unreleased-anthropic-model-made-progress-on-one-of-maths-biggest-unsolved-problems-techcrunch</guid>
+      <pubDate>Wed, 12 Aug 2026 19:39:18 GMT</pubDate>
+      <description><![CDATA[एउटा अप्रकाशित एन्थ्रोपिक मोडेलले गणितको सबैभन्दा ठूलो अनसुलझे समस्याहरू मध्ये एकमा प्रगति गर्‍यो  TechCrunch]]></description>
+    </item>
+    <item>
+      <title><![CDATA[एपिक सेल्स आर्टस्टेशन, प्रयोगकर्ताहरू खुसी छन् यो अब 'एआई स्लप' बाट मुक्त छ]]></title>
+      <link>http://localhost:3000/news/epic-sells-artstation-users-happy-its-now-free-from-ai-slop-kotaku</link>
+      <guid isPermaLink="true">http://localhost:3000/news/epic-sells-artstation-users-happy-its-now-free-from-ai-slop-kotaku</guid>
+      <pubDate>Wed, 12 Aug 2026 19:39:17 GMT</pubDate>
+      <description><![CDATA[एपिक सेल्स आर्टस्टेशन, प्रयोगकर्ताहरू खुसी छन् यो अब 'एआई स्लप' कोटाकुबाट निःशुल्क छ]]></description>
+    </item>
+    <item>
+      <title><![CDATA[केहि टेकको सीईओ सुइटले ए.आई सँग क्लोन गर्दैछ। अब के हुन्छ? - बीबीसी]]></title>
+      <link>http://localhost:3000/news/some-of-techs-ceo-suite-is-cloning-itself-with-ai-what-happens-next-bbc</link>
+      <guid isPermaLink="true">http://localhost:3000/news/some-of-techs-ceo-suite-is-cloning-itself-with-ai-what-happens-next-bbc</guid>
+      <pubDate>Wed, 12 Aug 2026 19:39:16 GMT</pubDate>
+      <description><![CDATA[केहि टेकको सीईओ सुइटले ए.आई सँग क्लोन गर्दैछ। अब के हुन्छ?  बीबीसी]]></description>
+    </item>
+    <item>
+      <title><![CDATA[आम्दानी लाइभ अपडेटहरू: नेबियस स्टक बढ्यो ए.आई क्लाउड राजस्व ५१४% बढ्यो, काभाले कमाई हरायो]]></title>
+      <link>http://localhost:3000/news/earnings-live-updates-nebius-stock-soars-as-ai-cloud-revenue-jumps-514-cava-gains-on-earnings-beat-yahoo-finance</link>
+      <guid isPermaLink="true">http://localhost:3000/news/earnings-live-updates-nebius-stock-soars-as-ai-cloud-revenue-jumps-514-cava-gains-on-earnings-beat-yahoo-finance</guid>
+      <pubDate>Wed, 12 Aug 2026 19:39:14 GMT</pubDate>
+      <description><![CDATA[आम्दानी लाइभ अपडेटहरू: नेबियस स्टक बढ्यो ए.आई क्लाउड राजस्व ५१४% बढ्यो, काभाले नाफामा याहू फाइनान्सलाई हरायो]]></description>
+    </item>
+    <item>
+      <title><![CDATA[चिनियाँ टेक विशाल टेन्सेन्टले खर्च बढेको देख्छ, सम्भावित 'सुपीरियर' एआई रिटर्नको रक्षा गर्दछ]]></title>
+      <link>http://localhost:3000/news/chinese-tech-giant-tencent-sees-spending-surge-defends-potential-superior-ai-returns-cnbc</link>
+      <guid isPermaLink="true">http://localhost:3000/news/chinese-tech-giant-tencent-sees-spending-surge-defends-potential-superior-ai-returns-cnbc</guid>
+      <pubDate>Wed, 12 Aug 2026 19:39:13 GMT</pubDate>
+      <description><![CDATA[चिनियाँ टेक विशाल टेन्सेन्टले खर्च बढेको देख्छ, सम्भावित 'उच्चतम' एआई रिटर्नको रक्षा गर्छ  सीएनबीसी]]></description>
+    </item>
+    <item>
+      <title><![CDATA[एआई सफ्टवेयर कम्पनीहरू - र तिनीहरूमा ढालिएका लगानीकर्ताहरू]]></title>
+      <link>http://localhost:3000/news/ai-looms-over-software-companies-and-the-investors-who-piled-into-them-bloombergcom</link>
+      <guid isPermaLink="true">http://localhost:3000/news/ai-looms-over-software-companies-and-the-investors-who-piled-into-them-bloombergcom</guid>
+      <pubDate>Wed, 12 Aug 2026 19:39:12 GMT</pubDate>
+      <description><![CDATA[ए.आई सफ्टवेयर कम्पनीहरू - र तिनीहरूमा ढालिएका लगानीकर्ताहरूमाथि लुम्स Bloomberg.com]]></description>
+    </item>
+    <item>
+      <title><![CDATA[Pixel Watch ५ ले जेमिनी इन्टेलिजेन्स, एक नजरमा, र थप पाउँछ]]></title>
+      <link>http://localhost:3000/news/pixel-watch-5-gets-gemini-intelligence-at-a-glance-and-more-9to5google</link>
+      <guid isPermaLink="true">http://localhost:3000/news/pixel-watch-5-gets-gemini-intelligence-at-a-glance-and-more-9to5google</guid>
+      <pubDate>Wed, 12 Aug 2026 19:39:10 GMT</pubDate>
+      <description><![CDATA[Pixel Watch ५ ले जेमिनी इन्टेलिजेन्स, एक नजरमा, र थप ९to५गुगल प्राप्त गर्दछ]]></description>
+    </item>
+    <item>
+      <title><![CDATA[ग्राहकहरू ए.आई कम्प्युटिङ पावर सुरक्षित गर्न दौडँदा Nebius ले विगतका अनुमानहरूलाई शक्ति दिन्छ]]></title>
+      <link>http://localhost:3000/news/nebius-powers-past-estimates-as-customers-race-to-secure-ai-computing-power-yahoo-finance</link>
+      <guid isPermaLink="true">http://localhost:3000/news/nebius-powers-past-estimates-as-customers-race-to-secure-ai-computing-power-yahoo-finance</guid>
+      <pubDate>Wed, 12 Aug 2026 19:39:09 GMT</pubDate>
+      <description><![CDATA[नेबियसले विगतका अनुमानहरूलाई शक्ति दिन्छ जब ग्राहकहरू ए.आई कम्प्युटिङ पावर याहू फाइनान्स सुरक्षित गर्न दौडिन्छन्]]></description>
+    </item>
+    <item>
+      <title><![CDATA[यदि A.I. युवाहरूको जागिर लिन्छ, तिनीहरूले कस्तो प्रतिक्रिया दिन्छन्?]]></title>
+      <link>http://localhost:3000/news/if-ai-takes-the-jobs-of-young-people-how-will-they-react-the-new-yorker</link>
+      <guid isPermaLink="true">http://localhost:3000/news/if-ai-takes-the-jobs-of-young-people-how-will-they-react-the-new-yorker</guid>
+      <pubDate>Wed, 12 Aug 2026 19:39:08 GMT</pubDate>
+      <description><![CDATA[यदि A.I. युवाहरूको जागिर लिन्छ, तिनीहरूले कस्तो प्रतिक्रिया दिन्छन्?  न्यु योर्कर]]></description>
+    </item>
+    <item>
+      <title><![CDATA[एनभिडियाले ओपन एआई मोडलहरूलाई टक्कर दिन १-ट्रिलियन-पैरामिटर निमोट्रोन ४ निर्माण गर्दै, सूचना रिपोर्टहरू]]></title>
+      <link>http://localhost:3000/news/nvidia-building-1-trillion-parameter-nemotron-4-to-rival-open-ai-models-the-information-reports-yahoo-finance</link>
+      <guid isPermaLink="true">http://localhost:3000/news/nvidia-building-1-trillion-parameter-nemotron-4-to-rival-open-ai-models-the-information-reports-yahoo-finance</guid>
+      <pubDate>Wed, 12 Aug 2026 19:39:06 GMT</pubDate>
+      <description><![CDATA[एनभिडिया निर्माण १-ट्रिलियन-पैरामिटर Nemotron ४ खुला ए.आई मोडेलहरू प्रतिद्वन्द्वी गर्न, सूचना रिपोर्ट  याहू वित्त]]></description>
+    </item>
+    <item>
+      <title><![CDATA[उनको स्टार्ट-अपको लक्ष्य: A.I. त्यो प्रशिक्षित छ र ठूलो कम्पनी द्वारा नियन्त्रित छैन]]></title>
+      <link>http://localhost:3000/news/his-start-ups-goal-ai-that-is-trainable-and-not-controlled-by-a-big-company-nytimescom</link>
+      <guid isPermaLink="true">http://localhost:3000/news/his-start-ups-goal-ai-that-is-trainable-and-not-controlled-by-a-big-company-nytimescom</guid>
+      <pubDate>Wed, 12 Aug 2026 19:39:05 GMT</pubDate>
+      <description><![CDATA[उनको स्टार्ट-अपको लक्ष्य: A.I. त्यो तालिमयोग्य छ र ठूलो कम्पनी द्वारा नियन्त्रित छैन nytimes.com]]></description>
+    </item>
+    <item>
+      <title><![CDATA[RSI सिम्युलेटर: पुनरावर्ती आत्म-सुधारको अर्थशास्त्र खेल्नुहोस्]]></title>
+      <link>http://localhost:3000/news/rsi-simulator-play-the-economics-of-recursive-self-improvement-paradigmxyz</link>
+      <guid isPermaLink="true">http://localhost:3000/news/rsi-simulator-play-the-economics-of-recursive-self-improvement-paradigmxyz</guid>
+      <pubDate>Wed, 12 Aug 2026 19:39:03 GMT</pubDate>
+      <description><![CDATA[RSI सिम्युलेटर: पुनरावर्ती आत्म-सुधारको अर्थशास्त्र paradigm.xyz प्ले गर्नुहोस्]]></description>
+    </item>
+    
+  </channel>
+</rss>

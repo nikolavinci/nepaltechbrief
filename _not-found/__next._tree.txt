@@ -1,0 +1,3 @@
+:HL["/nepaltechbrief/_next/static/chunks/00mn8cbpo26n-.css","style"]
+:HL["/nepaltechbrief/_next/static/chunks/351xy-2vc-iuj.css","style"]
+0:{"tree":{"name":"","param":null,"prefetchHints":4112,"slots":{"children":{"name":"/_not-found","param":null,"prefetchHints":4160,"slots":{"children":{"name":"__PAGE__","param":null,"prefetchHints":4256,"slots":null}}}}},"staleTime":300,"buildId":"yBJaZOsFCX87ejQY1R7RM"}

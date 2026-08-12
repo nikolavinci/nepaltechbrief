@@ -1,0 +1,21 @@
+1:"$Sreact.fragment"
+2:I[97367,["/nepaltechbrief/_next/static/chunks/00vmvykzca94n.js"],"OutletBoundary"]
+3:"$Sreact.suspense"
+7:I[97367,["/nepaltechbrief/_next/static/chunks/00vmvykzca94n.js"],"ViewportBoundary"]
+8:I[97367,["/nepaltechbrief/_next/static/chunks/00vmvykzca94n.js"],"MetadataBoundary"]
+9:I[27201,["/nepaltechbrief/_next/static/chunks/00vmvykzca94n.js"],"IconMark"]
+b:I[39756,["/nepaltechbrief/_next/static/chunks/00vmvykzca94n.js"],"default"]
+c:I[37457,["/nepaltechbrief/_next/static/chunks/00vmvykzca94n.js"],"default"]
+6:X
+e:X
+e:C
+0:{"buildId":"yBJaZOsFCX87ejQY1R7RM","data":[{"rsc":["$","$1","c",{"children":[["$","div",null,{"className":"container mx-auto px-4 py-8 max-w-6xl","children":[["$","header",null,{"className":"mb-10 border-b-2 border-primary pb-4 inline-block","children":["$","h1",null,{"className":"text-4xl font-bold font-heading","children":"टेलिकम"}]}],["$","div",null,{"className":"py-20 text-center text-muted-foreground","children":["$","p",null,{"className":"text-xl","children":"कुनै लेख फेला परेन।"}]}]]}],null,["$","$L2",null,{"children":["$","$3",null,{"name":"Next.MetadataOutlet","children":"$@4"}]}]]}],"isPartial":"$@5","staleTime":"$6","varyParams":null},{"rsc":["$","$1","h",{"children":[null,["$","$L7",null,{"children":[["$","meta","0",{"charSet":"utf-8"}],["$","meta","1",{"name":"viewport","content":"width=device-width, initial-scale=1"}]]}],["$","div",null,{"hidden":true,"children":["$","$L8",null,{"children":["$","$3",null,{"name":"Next.Metadata","children":[["$","title","0",{"children":"NepTechNews | नेपालको उत्कृष्ट टेक न्युज पोर्टल"}],["$","meta","1",{"name":"description","content":"प्रविधि, स्टार्टअप, ग्याजेट्स, र एप्ससम्बन्धी नेपालको उत्कृष्ट डिजिटल समाचार पोर्टल।"}],["$","meta","2",{"property":"og:title","content":"NepTechNews | नेपालको उत्कृष्ट टेक न्युज पोर्टल"}],["$","meta","3",{"property":"og:description","content":"प्रविधि, स्टार्टअप, ग्याजेट्स, र एप्ससम्बन्धी नेपालको उत्कृष्ट डिजिटल समाचार पोर्टल।"}],["$","meta","4",{"property":"og:site_name","content":"NepTechNews"}],["$","meta","5",{"property":"og:image","content":"http://localhost:3000/placeholder-og.png"}],["$","meta","6",{"property":"og:type","content":"website"}],["$","meta","7",{"name":"twitter:card","content":"summary_large_image"}],["$","meta","8",{"name":"twitter:site","content":"@neptechnews"}],["$","meta","9",{"name":"twitter:creator","content":"@neptechnews"}],["$","meta","10",{"name":"twitter:title","content":"NepTechNews | नेपालको उत्कृष्ट टेक न्युज पोर्टल"}],["$","meta","11",{"name":"twitter:description","content":"प्रविधि, स्टार्टअप, ग्याजेट्स, र एप्ससम्बन्धी नेपालको उत्कृष्ट डिजिटल समाचार पोर्टल।"}],["$","meta","12",{"name":"twitter:image","content":"http://localhost:3000/placeholder-og.png"}],["$","link","13",{"rel":"icon","href":"/nepaltechbrief/favicon.ico?favicon.2vob68tjqpejf.ico","sizes":"256x256","type":"image/x-icon"}],["$","$L9","14",{}]]}]}]}],["$","meta",null,{"name":"next-size-adjust","content":""}]]}],"isPartial":"$@a","staleTime":"$6","varyParams":null},{"rsc":["$","$1","c",{"children":[null,["$","$Lb",null,{"parallelRouterKey":"children","template":["$","$Lc",null,{}]}]]}],"isPartial":"$@d","staleTime":"$6","varyParams":"$e"},{"rsc":["$","$1","c",{"children":[null,["$","$Lb",null,{"parallelRouterKey":"children","template":["$","$Lc",null,{}]}]]}],"isPartial":"$@f","staleTime":"$6","varyParams":"$e"}],"isUpgradeableISRFallback":false,"a":"$@10","rootVaryParams":null,"needsRuntimeRequest":"$@11"}
+4:null
+11:true
+6:300
+6:C
+10:0
+a:"$undefined"
+d:"$undefined"
+f:"$undefined"
+5:"$undefined"
