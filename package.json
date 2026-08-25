@@ -9,6 +9,8 @@
   ],
   "scripts": {
     "dev:web": "npm run dev -w apps/web",
-    "build:web": "npm run build -w apps/web"
+    "build:web": "npm run build -w apps/web",
+    "analyze:web": "npm run analyze -w apps/web",
+    "analyze:turbo:web": "npm run analyze:turbo -w apps/web"
   }
 }
