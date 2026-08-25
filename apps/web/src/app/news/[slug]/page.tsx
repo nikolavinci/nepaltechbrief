@@ -1,6 +1,9 @@
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 import { fetchArticle, fetchArticles } from '@/lib/api';
+import { AdBannerSidebar } from '@/components/ads/AdBannerSidebar';
+import { DynamicAd } from '@/components/ads/DynamicAd';
 import type { Metadata } from 'next';
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
@@ -19,7 +22,9 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const featuredImage = article.featured_image 
     ? (article.featured_image.startsWith('http') 
         ? article.featured_image 
-        : `${process.env.NEXT_PUBLIC_API_URL?.replace('/api', '')}${article.featured_image}`)
+        : (process.env.NODE_ENV === 'development' 
+            ? `${process.env.NEXT_PUBLIC_API_URL?.replace('/api', '')}${article.featured_image}` 
+            : `/nepaltechbrief${article.featured_image}`))
     : '/placeholder-og.png';
 
   return {
@@ -30,7 +35,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
       description,
       type: 'article',
       publishedTime: article.published_at || article.created_at,
-      authors: [article.author?.name || 'NepTechNews Editor'],
+      authors: [article.author?.name || 'NepTechBrief Editor'],
       images: [featuredImage],
     },
     twitter: {
@@ -42,6 +47,13 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   };
 }
 
+export async function generateStaticParams() {
+  const { data: articles } = await fetchArticles(1, 2000);
+  return articles.map((article: any) => ({
+    slug: article.slug,
+  }));
+}
+
 export default async function NewsArticlePage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
 
@@ -51,7 +63,9 @@ export default async function NewsArticlePage({ params }: { params: Promise<{ sl
   const featuredImage = article.featured_image 
     ? (article.featured_image.startsWith('http') 
         ? article.featured_image 
-        : `${process.env.NEXT_PUBLIC_API_URL?.replace('/api', '')}${article.featured_image}`)
+        : (process.env.NODE_ENV === 'development' 
+            ? `${process.env.NEXT_PUBLIC_API_URL?.replace('/api', '')}${article.featured_image}` 
+            : `/nepaltechbrief${article.featured_image}`))
     : 'https://images.unsplash.com/photo-1550751827-4bd374c3f58b?q=80&w=2000&auto=format&fit=crop';
 
   const jsonLd = {
@@ -63,8 +77,8 @@ export default async function NewsArticlePage({ params }: { params: Promise<{ sl
     dateModified: article.updated_at || article.created_at,
     author: [{
       '@type': 'Person',
-      name: article.author?.name || 'NepTechNews Editor',
-      url: `https://neptechnews.com/author/${article.author_id}`
+      name: article.author?.name || 'NepTechBrief Editor',
+      url: `https://NepTechBrief.com/author/${article.author_id}`
     }]
   };
 
@@ -77,24 +91,24 @@ export default async function NewsArticlePage({ params }: { params: Promise<{ sl
   // Strip duplicate featured image from body
   let cleanBody = article.body_np || article.body_en;
   if (article.featured_image) {
-    const filename = article.featured_image.split('/').pop();
-    if (filename) {
-      // Create a regex to match an img tag that contains the filename
-      const imgRegex = new RegExp(`<img[^>]*${filename}[^>]*>`, 'i');
-      cleanBody = cleanBody.replace(imgRegex, '');
-    } else {
-      cleanBody = cleanBody.replace(/<img[^>]*>/i, '');
-    }
+    // Aggressively remove the very first image tag in the body
+    cleanBody = cleanBody.replace(/<img[^>]*>/i, '');
   }
 
   // Strip "appeared first on" spam links
   cleanBody = cleanBody.replace(/<p[^>]*>\s*The post\s*<a[^>]*>.*?<\/a>\s*appeared first on\s*<a[^>]*>.*?<\/a>\.?\s*<\/p>/ig, '');
   cleanBody = cleanBody.replace(/The post\s*<a[^>]*>.*?<\/a>\s*appeared first on\s*<a[^>]*>.*?<\/a>\.?/ig, '');
 
+  const paragraphs = cleanBody.split('</p>');
+  const midPoint = Math.floor(paragraphs.length / 2);
+  const firstHalf = paragraphs.slice(0, midPoint).join('</p>') + (paragraphs.length > 0 ? '</p>' : '');
+  const secondHalf = paragraphs.slice(midPoint).join('</p>');
+
   const getImageUrl = (item: any) => {
     if (!item || !item.featured_image) return 'https://placehold.co/600x400/eeeeee/999999?text=No+Image';
     if (item.featured_image.startsWith('http')) return item.featured_image;
-    return `${process.env.NEXT_PUBLIC_API_URL?.replace('/api', '')}${item.featured_image}`;
+    if (process.env.NODE_ENV === 'development') return `${process.env.NEXT_PUBLIC_API_URL?.replace('/api', '')}${item.featured_image}`;
+    return `/nepaltechbrief${item.featured_image}`;
   };
 
   const getTitle = (item: any) => {
@@ -102,21 +116,10 @@ export default async function NewsArticlePage({ params }: { params: Promise<{ sl
     return item.title_np || item.title_en;
   };
 
-  const authorsList = ['Sanjay K.C', 'Sandhya K.C', 'Saanvi KC', 'Sonu Karki'];
-  let slugHash = 0;
-  for (let i = 0; i < slug.length; i++) {
-    slugHash = slug.charCodeAt(i) + ((slugHash << 5) - slugHash);
-  }
-  const authorIndex = Math.abs(slugHash) % authorsList.length;
-  const authorName = authorsList[authorIndex];
-  
-  let nameHash = 0;
-  for (let i = 0; i < authorName.length; i++) {
-    nameHash = authorName.charCodeAt(i) + ((nameHash << 5) - nameHash);
-  }
-  const pokemonId = (Math.abs(nameHash) % 151) + 1;
-  const authorImage = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${pokemonId}.png`;
-  const authorSlug = authorName.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+  const authorName = article.author?.name || 'Editor';
+  const authorSlug = article.author?.slug || authorName.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+  const authorImage = article.author?.avatar_url || `/nepaltechbrief/storage/authors/${authorSlug}.jpg`;
+  const authorDesc = article.author?.description || `${authorName} प्रविधि र डिजिटल अर्थतन्त्रमा विशेषज्ञता हासिल गरेका एक अनुभवी पत्रकार हुन्। उनले पछिल्लो समयमा नेपालको स्टार्टअप इकोसिस्टम र प्रविधि क्षेत्रमा भइरहेका परिवर्तनहरूलाई नजिकबाट नियालिरहेका छन्।`;
 
   return (
     <div className="container mx-auto px-4 py-8 xl:py-12 max-w-7xl">
@@ -147,15 +150,12 @@ export default async function NewsArticlePage({ params }: { params: Promise<{ sl
         </h1>
 
         <Link href={`/author/${authorSlug}`} className="flex items-center gap-4 pt-4 border-t border-dashed hover:opacity-80 transition-opacity group">
-          <div className="w-12 h-12 rounded-full overflow-hidden flex-shrink-0 border-2 border-transparent group-hover:border-primary transition-colors">
-            <img src={authorImage} alt={authorName} className="object-cover w-full h-full" />
+          <div className="w-12 h-12 rounded-full overflow-hidden flex-shrink-0 border-2 border-transparent group-hover:border-primary transition-colors relative">
+            <Image src={authorImage} alt={authorName} fill sizes="48px" className="object-cover" />
           </div>
           <div>
             <p className="font-semibold text-sm group-hover:text-primary transition-colors">
               {authorName}
-            </p>
-            <p className="text-xs text-muted-foreground">
-              सम्पादक
             </p>
           </div>
         </Link>
@@ -163,36 +163,37 @@ export default async function NewsArticlePage({ params }: { params: Promise<{ sl
 
       {/* Featured Image */}
       <figure className="mb-12">
-        <div className="w-full aspect-video bg-muted rounded-lg overflow-hidden">
-          <img 
+        <div className="w-full aspect-video bg-muted rounded-lg overflow-hidden relative">
+          <Image 
             src={featuredImage} 
             alt="Featured Image" 
-            className="object-cover w-full h-full"
+            fill
+            sizes="(max-width: 1024px) 100vw, 800px"
+            priority
+            className="object-cover"
           />
         </div>
       </figure>
 
       {/* Article Body */}
       <article className="prose prose-lg dark:prose-invert prose-headings:font-heading prose-a:text-primary max-w-none leading-relaxed tracking-wide text-foreground/90">
-        <div 
-          dangerouslySetInnerHTML={{ __html: cleanBody }}
-        />
+        <div dangerouslySetInnerHTML={{ __html: firstHalf }} />
+        <DynamicAd position="article_mid" />
+        <div dangerouslySetInnerHTML={{ __html: secondHalf }} />
       </article>
-
         {/* Author Bio Box */}
         <div className="my-12 p-6 md:p-8 bg-muted/30 border border-border/50 rounded-2xl flex flex-col md:flex-row gap-6 items-center md:items-start transition-colors hover:border-primary/30 group/bio">
-          <Link href={`/author/${authorSlug}`} className="w-24 h-24 rounded-full overflow-hidden border-2 border-transparent flex-shrink-0 group-hover/bio:border-primary/50 transition-colors bg-card p-2 shadow-sm">
-            <img src={authorImage} alt={authorName} className="object-contain w-full h-full drop-shadow-sm" />
+          <Link href={`/author/${authorSlug}`} className="w-24 h-24 rounded-full overflow-hidden border-2 border-transparent flex-shrink-0 group-hover/bio:border-primary/50 transition-colors bg-card p-2 shadow-sm relative">
+            <Image src={authorImage} alt={authorName} fill sizes="96px" className="object-cover drop-shadow-sm" />
           </Link>
           <div className="flex-1 text-center md:text-left">
             <div className="flex flex-col md:flex-row items-center gap-3 mb-3">
               <Link href={`/author/${authorSlug}`} className="text-xl font-bold font-heading hover:text-primary transition-colors">
                 {authorName}
               </Link>
-              <span className="text-xs font-semibold px-3 py-1 bg-primary/10 text-primary rounded-full">सम्पादक</span>
             </div>
             <p className="text-muted-foreground mb-4 text-sm md:text-base leading-relaxed">
-              {authorName} प्रविधि र डिजिटल अर्थतन्त्रमा विशेषज्ञता हासिल गरेका एक अनुभवी पत्रकार हुन्। उनले पछिल्लो समयमा नेपालको स्टार्टअप इकोसिस्टम र प्रविधि क्षेत्रमा भइरहेका परिवर्तनहरूलाई नजिकबाट नियालिरहेका छन्।
+              {authorDesc}
             </p>
             <div className="flex items-center justify-center md:justify-start gap-4">
               <a href="#" aria-label="Author Twitter" className="text-muted-foreground hover:text-primary transition-colors">
@@ -214,10 +215,12 @@ export default async function NewsArticlePage({ params }: { params: Promise<{ sl
           {relatedNews.map((item: any, i: number) => (
             <Link href={`/news/${item.slug}`} key={i} className="flex gap-4 group border border-border/50 p-4 rounded-xl hover:shadow-md transition-all bg-card hover:border-primary/30">
               <div className="w-24 h-24 bg-muted rounded-lg overflow-hidden flex-shrink-0 relative">
-                <img 
+                <Image 
                   src={getImageUrl(item)} 
                   alt="Related Story" 
-                  className="object-cover w-full h-full group-hover:scale-110 transition-transform duration-300"
+                  fill
+                  sizes="96px"
+                  className="object-cover group-hover:scale-110 transition-transform duration-300"
                 />
               </div>
               <div className="flex flex-col justify-center">
@@ -238,13 +241,7 @@ export default async function NewsArticlePage({ params }: { params: Promise<{ sl
       <aside className="lg:col-span-4 space-y-8">
         
         {/* Sidebar Ad */}
-        <a href="https://nikolavinci.com" target="_blank" rel="noopener noreferrer" className="relative w-full aspect-square bg-gradient-to-br from-zinc-900 to-black text-white flex flex-col items-center justify-center p-6 text-center shadow-lg hover:shadow-xl transition-all group overflow-hidden border border-zinc-800">
-          <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1460925895917-afdab827c52f?q=80&w=600&auto=format&fit=crop')] opacity-20 group-hover:opacity-30 transition-opacity bg-cover bg-center mix-blend-overlay"></div>
-          <span className="relative z-10 font-bold text-xl md:text-2xl mb-2 leading-tight">Build Your Dream Website</span>
-          <span className="relative z-10 text-sm text-zinc-300 mb-6">Custom Website Creation by Nikola Vinci</span>
-          <span className="relative z-10 px-6 py-2 bg-primary text-primary-foreground rounded-full text-sm font-bold uppercase tracking-wider group-hover:bg-white group-hover:text-black transition-colors">Learn More</span>
-          <span className="absolute top-2 right-2 px-1 bg-black/50 text-[10px] text-zinc-400 uppercase rounded">Ad</span>
-        </a>
+        <AdBannerSidebar />
 
         {/* Trending Widget */}
         <div className="bg-card shadow-sm p-6 rounded-2xl border border-border/50">
@@ -277,10 +274,12 @@ export default async function NewsArticlePage({ params }: { params: Promise<{ sl
             {latestNews.map((item: any, i: number) => (
               <Link href={`/news/${item.slug}`} key={i} className="group flex gap-4 items-center">
                 <div className="w-24 aspect-[4/3] bg-muted rounded-lg overflow-hidden flex-shrink-0 relative">
-                  <img 
+                  <Image 
                     src={getImageUrl(item)} 
                     alt="Recent thumbnail" 
-                    className="object-cover w-full h-full group-hover:scale-110 transition-transform duration-500"
+                    fill
+                    sizes="96px"
+                    className="object-cover group-hover:scale-110 transition-transform duration-500"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
                 </div>
