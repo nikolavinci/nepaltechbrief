@@ -55,7 +55,18 @@ export function DynamicAd({ position }: { position: "top" | "bottom" | "between_
     }
   }, [ad]);
 
-  if (loading) return null; // Don't show anything while loading to avoid layout shifts.
+  if (loading) {
+    // Preserve space to prevent Cumulative Layout Shift (CLS)
+    const minHeights = {
+      top: 'min-h-[130px]',
+      bottom: 'min-h-[130px]',
+      between_sections: 'min-h-[130px]',
+      sidebar: 'min-h-[300px]',
+      article_mid: 'min-h-[130px]'
+    };
+    return <div className={`w-full bg-muted/20 animate-pulse rounded-2xl ${minHeights[position]} my-4`} />;
+  }
+
   if (!ad) return null; // Ad position disabled or no ads exist
 
   if (ad.type === "third_party") {
