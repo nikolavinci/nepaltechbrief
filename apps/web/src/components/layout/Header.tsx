@@ -22,20 +22,22 @@ export function Header() {
   return (
     <header className="border-b bg-background sticky top-0 z-50 shadow-sm">
       {/* Top breaking news bar */}
-      <div className="bg-primary text-primary-foreground text-xs py-2 px-4 flex justify-between items-center">
-        <div>
+      <div className="bg-primary text-primary-foreground text-xs py-2 px-4 border-b border-primary/20">
+        <div className="max-w-[1400px] mx-auto flex justify-between items-center">
+          <div>
           <span className="font-bold mr-2 tracking-wide">ताजा अपडेट:</span>
           <span>प्रविधिको दुनियाँमा आजको मुख्य समाचार यहाँ हेर्नुहोस्।</span>
         </div>
         <div className="hidden sm:block font-medium" suppressHydrationWarning>
           {new Date().toLocaleDateString('ne-NP', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
         </div>
+        </div>
       </div>
 
       {/* Main navigation */}
-      <div className="container mx-auto px-4 py-4 flex items-center justify-between relative">
+      <div className="max-w-[1400px] mx-auto px-4 py-4 flex items-center justify-between relative">
         <div className="flex items-center gap-8">
-          <Link href={`/`} className="text-3xl font-extrabold tracking-tighter text-blue-600 dark:text-blue-400" aria-label="NepTechNews Home">
+          <Link href={`/`} className="text-3xl font-extrabold tracking-tighter text-blue-600 dark:text-blue-400" aria-label="NepTechBrief Home">
             NepTech<span className="text-orange-500">News</span>
           </Link>
           <nav className="hidden lg:flex gap-6 text-base font-semibold" aria-label="Main Navigation">
@@ -44,6 +46,7 @@ export function Header() {
             <Link href={`/category/apps-software`} className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors">एप्स र सफ्टवेयर</Link>
             <Link href={`/category/telecom`} className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors">टेलिकम</Link>
             <Link href={`/category/startups`} className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors">स्टार्टअप</Link>
+            <Link href={`/category/ai`} className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors">ए.आई</Link>
           </nav>
         </div>
 
@@ -62,6 +65,24 @@ export function Header() {
               <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
             )}
           </button>
+
+          {/* Mobile Menu Toggle */}
+          <div className="lg:hidden relative">
+            <button 
+              className="p-2 border rounded-md hover:bg-muted transition-colors text-muted-foreground peer"
+              aria-label="Toggle Mobile Menu"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="18" y2="18"/></svg>
+            </button>
+            <nav className="absolute right-0 top-full mt-2 w-48 bg-background border rounded-lg shadow-xl z-50 flex flex-col p-2 hidden peer-focus-within:flex hover:flex opacity-0 peer-focus-within:opacity-100 hover:opacity-100 transition-opacity">
+              <Link href={`/category/tech-news`} className="p-3 hover:bg-muted rounded-md transition-colors text-sm font-semibold">टेक न्युज</Link>
+              <Link href={`/category/gadgets`} className="p-3 hover:bg-muted rounded-md transition-colors text-sm font-semibold">ग्याजेट्स</Link>
+              <Link href={`/category/apps-software`} className="p-3 hover:bg-muted rounded-md transition-colors text-sm font-semibold">एप्स र सफ्टवेयर</Link>
+              <Link href={`/category/telecom`} className="p-3 hover:bg-muted rounded-md transition-colors text-sm font-semibold">टेलिकम</Link>
+              <Link href={`/category/startups`} className="p-3 hover:bg-muted rounded-md transition-colors text-sm font-semibold">स्टार्टअप</Link>
+              <Link href={`/category/ai`} className="p-3 hover:bg-muted rounded-md transition-colors text-sm font-semibold">ए.आई</Link>
+            </nav>
+          </div>
         </div>
 
         {/* Search Overlay */}

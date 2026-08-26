@@ -16,14 +16,14 @@ export default async function TermsPage({ params }: { params: Promise<{ lang: st
       <div className="prose prose-lg dark:prose-invert max-w-none space-y-6">
         <p>
           {isEn 
-            ? 'By accessing and using NepTechNews, you accept and agree to be bound by the terms and provision of this agreement. In addition, when using these particular services, you shall be subject to any posted guidelines or rules applicable to such services.' 
+            ? 'By accessing and using NepTechBrief, you accept and agree to be bound by the terms and provision of this agreement. In addition, when using these particular services, you shall be subject to any posted guidelines or rules applicable to such services.' 
             : 'नेपटेकन्युज पहुँच गरेर र प्रयोग गरेर, तपाइँ यस सम्झौताका सर्तहरू र प्रावधानहरू स्वीकार गर्नुहुन्छ। थप रूपमा, यी विशेष सेवाहरू प्रयोग गर्दा, तपाइँ त्यस्ता सेवाहरूमा लागू हुने कुनै पनि पोस्ट गरिएका दिशानिर्देशहरू वा नियमहरूको अधीनमा हुनुहुनेछ।'}
         </p>
 
         <h3 className="text-2xl font-bold mt-8 mb-4">{isEn ? '1. Content and Copyright' : '१. सामग्री र प्रतिलिपि अधिकार'}</h3>
         <p>
           {isEn 
-            ? 'All content published on NepTechNews, including articles, images, graphics, and videos, is the property of NepTech Media Group Pvt. Ltd. unless otherwise stated. Unauthorized reproduction or distribution is strictly prohibited.' 
+            ? 'All content published on NepTechBrief, including articles, images, graphics, and videos, is the property of NepTech Media Group Pvt. Ltd. unless otherwise stated. Unauthorized reproduction or distribution is strictly prohibited.' 
             : 'नेपटेकन्युजमा प्रकाशित सबै सामग्रीहरू, लेख, छविहरू, ग्राफिक्स, र भिडियोहरू सहित, नेपटेक मिडिया ग्रुप प्रा. लि. को सम्पत्ति हो, अन्यथा उल्लेख नगरेसम्म। अनाधिकृत प्रजनन वा वितरण कडा रूपमा निषेधित छ।'}
         </p>
 
@@ -37,7 +37,7 @@ export default async function TermsPage({ params }: { params: Promise<{ lang: st
         <h3 className="text-2xl font-bold mt-8 mb-4">{isEn ? '3. Modifications to Service' : '३. सेवामा परिमार्जनहरू'}</h3>
         <p>
           {isEn 
-            ? 'NepTechNews reserves the right at any time to modify or discontinue, temporarily or permanently, the service (or any part thereof) with or without notice.' 
+            ? 'NepTechBrief reserves the right at any time to modify or discontinue, temporarily or permanently, the service (or any part thereof) with or without notice.' 
             : 'नेपटेकन्युजले कुनै पनि समयमा सूचना सहित वा बिना सेवा (वा यसको कुनै भाग) अस्थायी वा स्थायी रूपमा परिमार्जन वा बन्द गर्ने अधिकार सुरक्षित राख्छ।'}
         </p>
       </div>

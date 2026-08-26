@@ -42,7 +42,7 @@ export function LoginForm({ lang }: { lang: string }) {
           value={email}
           onChange={e => setEmail(e.target.value)}
           className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
-          placeholder="editor@neptechnews.com"
+          placeholder="editor@NepTechBrief.com"
         />
       </div>
 

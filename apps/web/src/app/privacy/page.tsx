@@ -16,7 +16,7 @@ export default async function PrivacyPage({ params }: { params: Promise<{ lang: 
       <div className="prose prose-lg dark:prose-invert max-w-none space-y-6">
         <p>
           {isEn 
-            ? 'At NepTechNews, we take your privacy seriously. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you visit our website.' 
+            ? 'At NepTechBrief, we take your privacy seriously. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you visit our website.' 
             : 'नेपटेकन्युजमा, हामी तपाईंको गोपनीयतालाई गम्भीर रूपमा लिन्छौं। यो गोपनीयता नीतिले तपाईं हाम्रो वेबसाइट भ्रमण गर्दा हामी कसरी तपाईंको जानकारी सङ्कलन, प्रयोग, खुलासा, र सुरक्षित राख्छौं भनी वर्णन गर्दछ।'}
         </p>
 
@@ -38,8 +38,8 @@ export default async function PrivacyPage({ params }: { params: Promise<{ lang: 
         <h3 className="text-2xl font-bold mt-8 mb-4">{isEn ? 'Contact Us' : 'सम्पर्क गर्नुहोस्'}</h3>
         <p>
           {isEn 
-            ? 'If you have questions or comments about this Privacy Policy, please contact us at privacy@neptechnews.com.' 
-            : 'यदि तपाइँसँग यस गोपनीयता नीतिको बारेमा प्रश्न वा टिप्पणीहरू छन् भने, कृपया हामीलाई privacy@neptechnews.com मा सम्पर्क गर्नुहोस्।'}
+            ? 'If you have questions or comments about this Privacy Policy, please contact us at privacy@NepTechBrief.com.' 
+            : 'यदि तपाइँसँग यस गोपनीयता नीतिको बारेमा प्रश्न वा टिप्पणीहरू छन् भने, कृपया हामीलाई privacy@NepTechBrief.com मा सम्पर्क गर्नुहोस्।'}
         </p>
       </div>
     </div>

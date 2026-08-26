@@ -21,7 +21,7 @@ export default async function TeamPage({ params }: { params: Promise<{ lang: str
         </h1>
         <p className="mt-4 text-muted-foreground text-lg max-w-2xl mx-auto">
           {isEn 
-            ? 'Meet the dedicated journalists and tech experts behind NepTechNews who work tirelessly to bring you accurate and timely information.' 
+            ? 'Meet the dedicated journalists and tech experts behind NepTechBrief who work tirelessly to bring you accurate and timely information.' 
             : 'नेपटेकन्युज पछाडिका समर्पित पत्रकार र प्रविधि विशेषज्ञहरूलाई भेट्नुहोस् जसले तपाईंलाई सही र समयसापेक्ष जानकारी ल्याउन अथक प्रयास गर्छन्।'}
         </p>
       </header>

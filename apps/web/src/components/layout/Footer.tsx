@@ -5,11 +5,11 @@ export function Footer() {
 
   return (
     <footer className="border-t bg-zinc-950 text-zinc-300 py-16 mt-auto">
-      <div className="container mx-auto px-4 grid grid-cols-1 md:grid-cols-12 gap-12 lg:gap-8">
+      <div className="max-w-[1400px] mx-auto px-4 grid grid-cols-1 md:grid-cols-12 gap-12 lg:gap-8">
         
         {/* Brand & Social Column */}
         <div className="md:col-span-4">
-          <Link href={`/`} className="text-3xl font-extrabold tracking-tighter text-blue-500 hover:text-blue-400 transition-colors inline-block mb-4" aria-label="NepTechNews Home">
+          <Link href={`/`} className="text-3xl font-extrabold tracking-tighter text-blue-500 hover:text-blue-400 transition-colors inline-block mb-4" aria-label="NepTechBrief Home">
             NepTech<span className="text-orange-500">News</span>
           </Link>
           <p className="text-sm text-zinc-400 mb-6 leading-relaxed max-w-sm">
@@ -65,8 +65,8 @@ export function Footer() {
       </div>
       
       {/* Bottom Bar */}
-      <div className="container mx-auto px-4 mt-16 pt-8 border-t border-zinc-800 flex flex-col md:flex-row items-center justify-between gap-4 text-xs text-zinc-500">
-        <p>© {currentYear} NepTechNews. सर्वाधिकार सुरक्षित।</p>
+      <div className="max-w-[1400px] mx-auto px-4 mt-16 pt-8 border-t border-zinc-800 flex flex-col md:flex-row items-center justify-between gap-4 text-xs text-zinc-500">
+        <p>© {currentYear} NepTechBrief. सर्वाधिकार सुरक्षित।</p>
         <p>परिशुद्धताका साथ डिजाइन र विकास गरिएको।</p>
       </div>
     </footer>

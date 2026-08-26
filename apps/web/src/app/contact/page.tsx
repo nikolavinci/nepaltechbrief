@@ -59,7 +59,7 @@ export default async function ContactPage({ params }: { params: Promise<{ lang: 
                 <p>{isEn ? 'Baneshwor, Kathmandu' : 'बानेश्वर, काठमाडौं'}</p>
                 <p>{isEn ? 'Bagmati Province, Nepal' : 'बागमती प्रदेश, नेपाल'}</p>
                 <p className="pt-2"><strong>{isEn ? 'Phone:' : 'फोन:'}</strong> +977-1-4123456</p>
-                <p><strong>{isEn ? 'Email:' : 'इमेल:'}</strong> info@neptechnews.com</p>
+                <p><strong>{isEn ? 'Email:' : 'इमेल:'}</strong> info@NepTechBrief.com</p>
               </address>
             </CardContent>
           </Card>
@@ -72,7 +72,7 @@ export default async function ContactPage({ params }: { params: Promise<{ lang: 
                   ? 'For digital ad placements, sponsored content, and partnerships, please contact our business team.' 
                   : 'डिजिटल विज्ञापन प्लेसमेन्ट, प्रायोजित सामग्री, र साझेदारीको लागि, कृपया हाम्रो व्यापार टोलीलाई सम्पर्क गर्नुहोस्।'}
               </p>
-              <p className="text-primary font-bold">ads@neptechnews.com</p>
+              <p className="text-primary font-bold">ads@NepTechBrief.com</p>
               <p className="text-primary font-bold">+977-9801234567</p>
             </CardContent>
           </Card>

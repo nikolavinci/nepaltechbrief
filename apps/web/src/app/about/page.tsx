@@ -8,14 +8,14 @@ export default async function AboutPage({ params }: { params: Promise<{ lang: st
     <div className="container mx-auto px-4 py-12 max-w-4xl min-h-[60vh]">
       <header className="mb-12 border-b-2 border-primary pb-4">
         <h1 className="text-4xl font-extrabold uppercase text-primary">
-          {isEn ? 'About NepTechNews' : 'नेपटेकन्युजको बारेमा'}
+          {isEn ? 'About NepTechBrief' : 'नेपटेकन्युजको बारेमा'}
         </h1>
       </header>
       
       <div className="prose prose-lg dark:prose-invert max-w-none">
         <p className="text-xl font-medium leading-relaxed mb-8">
           {isEn 
-            ? 'NepTechNews is Nepal’s premier digital news platform, dedicated to delivering high-quality, verified, and timely information to our readers across the globe. Our mission is to bridge the information gap through robust digital journalism.' 
+            ? 'NepTechBrief is Nepal’s premier digital news platform, dedicated to delivering high-quality, verified, and timely information to our readers across the globe. Our mission is to bridge the information gap through robust digital journalism.' 
             : 'नेपटेकन्युज नेपालको प्रमुख डिजिटल समाचार प्लेटफर्म हो, जसले विश्वभरका हाम्रा पाठकहरूलाई उच्च-गुणस्तर, प्रमाणित, र समयसापेक्ष जानकारी प्रदान गर्न समर्पित छ। हाम्रो मिशन बलियो डिजिटल पत्रकारिता मार्फत सूचनाको खाडललाई कम गर्नु हो।'}
         </p>
         

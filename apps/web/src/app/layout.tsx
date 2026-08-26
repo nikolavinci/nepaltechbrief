@@ -25,19 +25,19 @@ const notoDevanagari = Noto_Sans_Devanagari({
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'),
   title: {
-    template: "%s | NepTechNews",
-    default: "NepTechNews | नेपालको उत्कृष्ट टेक न्युज पोर्टल",
+    template: "%s | NepTechBrief",
+    default: "NepTechBrief | नेपालको उत्कृष्ट टेक न्युज पोर्टल",
   },
   description: "प्रविधि, स्टार्टअप, ग्याजेट्स, र एप्ससम्बन्धी नेपालको उत्कृष्ट डिजिटल समाचार पोर्टल।",
   openGraph: {
     type: 'website',
-    siteName: 'NepTechNews',
+    siteName: 'NepTechBrief',
     images: ['/placeholder-og.png'],
   },
   twitter: {
     card: 'summary_large_image',
-    site: '@neptechnews',
-    creator: '@neptechnews',
+    site: '@NepTechBrief',
+    creator: '@NepTechBrief',
   },
 };
 
