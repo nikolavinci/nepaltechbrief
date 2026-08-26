@@ -1,5 +1,7 @@
 import { fetchArticles } from '@/lib/api';
 
+export const revalidate = 60;
+
 export async function GET(request: Request) {
   // Fetch latest 20 published articles
   const { data: articles } = await fetchArticles(1, 20);

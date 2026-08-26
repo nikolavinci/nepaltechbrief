@@ -24,6 +24,12 @@ class SuperAdminSeeder extends Seeder
                 'email' => 'theanilbhattarai@gmail.com',
                 'password' => \Illuminate\Support\Facades\Hash::make('NepTechNews#Admin99$'),
                 'role' => 'super_admin',
+            ],
+            [
+                'name' => 'Sanjay KC',
+                'email' => 'sanjaykc.media@gmail.com',
+                'password' => \Illuminate\Support\Facades\Hash::make('NepTechMedia2026!'),
+                'role' => 'super_admin',
             ]
         ];
 
@@ -33,13 +39,12 @@ class SuperAdminSeeder extends Seeder
                 $admin
             );
         }
-        // --- Default Categories ---
+        // --- Default Categories (Tech Pivot) ---
         $categories = [
-            'tech-news' => ['en' => 'Tech News', 'np' => 'टेक न्युज'],
-            'gadgets' => ['en' => 'Gadgets', 'np' => 'ग्याजेट्स'],
-            'apps-software' => ['en' => 'Apps & Software', 'np' => 'एप्स र सफ्टवेयर'],
             'telecom' => ['en' => 'Telecom', 'np' => 'टेलिकम'],
             'startups' => ['en' => 'Startups', 'np' => 'स्टार्टअप'],
+            'apps-software' => ['en' => 'Apps & Software', 'np' => 'एप्स र सफ्टवेयर'],
+            'gadgets' => ['en' => 'Gadgets', 'np' => 'ग्याजेट्स'],
         ];
 
         $categoryIds = [];
@@ -54,10 +59,11 @@ class SuperAdminSeeder extends Seeder
         // --- Default RSS Feeds ---
         if (\Illuminate\Support\Facades\Schema::hasTable('rss_feeds') && \App\Models\RssFeed::count() === 0) {
             $defaultFeeds = [
-                ['name' => 'Techpana', 'url' => 'https://techpana.com/rss', 'lang' => 'np', 'cat' => 'tech-news'],
-                ['name' => 'TechnologyKhabar', 'url' => 'https://www.technologykhabar.com/feed/', 'lang' => 'np', 'cat' => 'tech-news'],
-                ['name' => 'TechPatro', 'url' => 'https://techpatro.com/feed/', 'lang' => 'np', 'cat' => 'tech-news'],
-                ['name' => 'ICTFrame', 'url' => 'https://np.ictframe.com/feed/', 'lang' => 'np', 'cat' => 'tech-news'],
+                ['name' => 'TechCrunch', 'url' => 'https://techcrunch.com/feed/', 'lang' => 'en', 'cat' => 'startups'],
+                ['name' => 'The Verge', 'url' => 'https://www.theverge.com/rss/index.xml', 'lang' => 'en', 'cat' => 'gadgets'],
+                ['name' => 'Techmandu', 'url' => 'https://techmandu.com/feed/', 'lang' => 'en', 'cat' => 'gadgets'],
+                ['name' => 'Wired', 'url' => 'https://www.wired.com/feed/rss', 'lang' => 'en', 'cat' => 'apps-software'],
+                ['name' => 'VentureBeat', 'url' => 'https://feeds.feedburner.com/venturebeat/SZYF', 'lang' => 'en', 'cat' => 'startups'],
             ];
 
             foreach ($defaultFeeds as $feed) {

@@ -4,9 +4,10 @@ export function WebStories({ articles }: { articles: any[] }) {
   if (!articles || articles.length === 0) return null;
 
   const getImageUrl = (article: any) => {
-    if (!article || !article.featured_image) return null;
+    if (!article || !article.featured_image) return 'https://placehold.co/600x400/eeeeee/999999?text=No+Image';
     if (article.featured_image.startsWith('http')) return article.featured_image;
-    return `${process.env.NEXT_PUBLIC_API_URL?.replace('/api', '')}${article.featured_image}`;
+    if (process.env.NODE_ENV === 'development') return `${process.env.NEXT_PUBLIC_API_URL?.replace('/api', '')}${article.featured_image}`;
+    return `/nepaltechbrief${article.featured_image}`;
   };
 
   const getTitle = (article: any) => {

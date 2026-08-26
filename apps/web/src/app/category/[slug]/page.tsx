@@ -1,5 +1,12 @@
 import Link from 'next/link';
-import { fetchArticles } from '@/lib/api';
+import { fetchArticles, fetchCategories } from '@/lib/api';
+
+export async function generateStaticParams() {
+  const categories = await fetchCategories();
+  return categories.map((category: any) => ({
+    slug: category.slug,
+  }));
+}
 
 export default async function CategoryPage({ 
   params 
@@ -21,7 +28,7 @@ export default async function CategoryPage({
                 : titleEn;
 
   // Fetch articles and filter by category (or map tech-news to technology)
-  const { data: articles } = await fetchArticles(1, 40);
+  const { data: articles } = await fetchArticles(1, 100);
   const categoryArticles = articles.filter((a: any) => 
     a.category?.slug === categorySlug || 
     (categorySlug === 'tech-news' && a.category?.slug === 'technology')
@@ -30,7 +37,8 @@ export default async function CategoryPage({
   const getImageUrl = (item: any) => {
     if (!item || !item.featured_image) return 'https://placehold.co/600x400/eeeeee/999999?text=No+Image';
     if (item.featured_image.startsWith('http')) return item.featured_image;
-    return `${process.env.NEXT_PUBLIC_API_URL?.replace('/api', '')}${item.featured_image}`;
+    if (process.env.NODE_ENV === 'development') return `${process.env.NEXT_PUBLIC_API_URL?.replace('/api', '')}${item.featured_image}`;
+    return `/nepaltechbrief${item.featured_image}`;
   };
 
   const getTitle = (item: any) => {

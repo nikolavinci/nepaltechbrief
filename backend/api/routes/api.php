@@ -31,11 +31,24 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/media', [\App\Http\Controllers\Api\MediaController::class, 'index']);
     Route::post('/media/upload', [\App\Http\Controllers\Api\MediaController::class, 'upload']);
     
+    // Users
+    Route::get('/users', [\App\Http\Controllers\Api\UserController::class, 'index']);
+    Route::get('/users/{id}', [\App\Http\Controllers\Api\UserController::class, 'show']);
+    Route::put('/users/{id}', [\App\Http\Controllers\Api\UserController::class, 'update']);
+    
     // Settings (Superadmin only)
     Route::get('/settings', [\App\Http\Controllers\SettingController::class, 'index']);
     Route::post('/settings', [\App\Http\Controllers\SettingController::class, 'store']);
 
-    Route::get('/analytics/dashboard', [\App\Http\Controllers\Api\AnalyticsController::class, 'dashboard']);
+    // Instead of a dedicated AnalyticsController for dashboard, just return stats inline for now
+    Route::get('/analytics/dashboard', function () {
+        return response()->json([
+            'total_users' => \App\Models\User::count(),
+            'total_articles' => \App\Models\Article::count(),
+            'total_categories' => \App\Models\Category::count(),
+            'total_rss_feeds' => \App\Models\RssFeed::count()
+        ]);
+    });
 });
 
 Route::get('/categories', [\App\Http\Controllers\Api\CategoryController::class, 'index']);
