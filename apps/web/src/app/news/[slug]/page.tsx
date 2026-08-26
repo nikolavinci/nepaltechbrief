@@ -44,6 +44,24 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
       description,
       images: [featuredImage],
     },
+    robots: {
+      index: true,
+      follow: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+      googleBot: {
+        index: true,
+        follow: true,
+        'max-video-preview': -1,
+        'max-image-preview': 'large',
+        'max-snippet': -1,
+      },
+    },
+    other: {
+      'Googlebot-News': 'index, follow',
+      'news_keywords': article.category?.name_en || 'Technology, News',
+    }
   };
 }
 
@@ -71,6 +89,10 @@ export default async function NewsArticlePage({ params }: { params: Promise<{ sl
   const jsonLd = {
     '@context': 'https://schema.org',
     '@type': 'NewsArticle',
+    mainEntityOfPage: {
+      '@type': 'WebPage',
+      '@id': `https://neptechbrief.com/news/${slug}`
+    },
     headline: article.title_np || article.title_en,
     image: [featuredImage],
     datePublished: article.published_at || article.created_at,
@@ -78,8 +100,16 @@ export default async function NewsArticlePage({ params }: { params: Promise<{ sl
     author: [{
       '@type': 'Person',
       name: article.author?.name || 'NepTechBrief Editor',
-      url: `https://NepTechBrief.com/author/${article.author_id}`
-    }]
+      url: `https://neptechbrief.com/author/${article.author?.slug || 'editor'}`
+    }],
+    publisher: {
+      '@type': 'Organization',
+      name: 'NepTechBrief',
+      logo: {
+        '@type': 'ImageObject',
+        url: 'https://neptechbrief.com/nepaltechbrief.png'
+      }
+    }
   };
 
   const { data: recentArticles } = await fetchArticles(1, 15);
