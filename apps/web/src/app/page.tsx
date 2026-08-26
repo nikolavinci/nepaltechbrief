@@ -2,6 +2,12 @@ import Link from 'next/link';
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { WebStories } from "@/components/home/WebStories";
+import { OpinionEditorials } from "@/components/home/OpinionEditorials";
+import { MultimediaVideo } from "@/components/home/MultimediaVideo";
+import { TechInsights } from "@/components/home/TechInsights";
+import { AdBannerTop } from "@/components/ads/AdBannerTop";
+import { AdBannerBottom } from "@/components/ads/AdBannerBottom";
+import { DynamicAd } from "@/components/ads/DynamicAd";
 import { fetchArticles } from '@/lib/api';
 
 export default async function HomePage() {
@@ -38,17 +44,7 @@ export default async function HomePage() {
     <div className="container max-w-[1400px] mx-auto px-4 py-6">
 
       {/* Top Ad Leaderboard */}
-      <a href="https://nikolavinci.com" target="_blank" rel="noopener noreferrer" className="w-full h-24 sm:h-32 bg-gradient-to-r from-zinc-900 via-black to-zinc-900 border border-zinc-800 flex items-center justify-between px-8 mb-8 relative group overflow-hidden">
-        <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1550745165-9bc0b252726f?q=80&w=1200&auto=format&fit=crop')] opacity-20 group-hover:opacity-30 transition-opacity bg-cover bg-center mix-blend-overlay"></div>
-        <div className="relative z-10 flex flex-col justify-center">
-          <span className="text-white font-extrabold text-xl sm:text-3xl leading-tight tracking-tight">Need a Custom Website?</span>
-          <span className="text-zinc-400 text-sm sm:text-base font-medium">Elevate your brand with Nikola Vinci's premium web solutions.</span>
-        </div>
-        <div className="relative z-10 hidden sm:block">
-          <span className="px-6 py-3 bg-white text-black font-bold uppercase tracking-wider rounded-sm group-hover:bg-primary group-hover:text-white transition-colors">Start Building</span>
-        </div>
-        <div className="absolute top-1 right-1 px-1 bg-black/50 text-[10px] text-zinc-500 uppercase rounded z-10">Ad</div>
-      </a>
+      <AdBannerTop />
 
       {/* Main Orchestration Grid */}
       <div className="grid grid-cols-1 xl:grid-cols-12 gap-8 mb-12">
@@ -58,18 +54,18 @@ export default async function HomePage() {
           {/* Main Lead Story */}
           {mainLead ? (
             <Link href={`/news/${mainLead.slug}`} className="group">
-              <div className="aspect-[21/9] bg-muted overflow-hidden relative border-b-4 border-primary">
+              <div className="aspect-square md:aspect-[21/9] bg-muted overflow-hidden relative border-b-4 border-primary">
                 <img 
                   src={getImageUrl(mainLead)} 
                   alt={getTitle(mainLead)} 
                   className="object-cover w-full h-full group-hover:scale-105 group-hover:blur-sm transition-all duration-700 bg-muted"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent" />
-                <div className="absolute bottom-6 left-6 right-6 p-4 rounded text-white max-w-4xl drop-shadow-md">
-                  <span className="bg-primary text-primary-foreground font-bold text-xs uppercase tracking-wider mb-3 inline-block px-2 py-1 shadow-sm">
+                <div className="absolute bottom-4 left-4 right-4 md:bottom-6 md:left-6 md:right-6 p-2 md:p-4 rounded text-white max-w-4xl drop-shadow-md">
+                  <span className="bg-primary text-primary-foreground font-bold text-[10px] md:text-xs uppercase tracking-wider mb-2 md:mb-3 inline-block px-2 py-1 shadow-sm">
                     {mainLead.category?.name_np || 'समाचार'}
                   </span>
-                  <h1 className="text-4xl md:text-6xl font-extrabold leading-tight text-white group-hover:text-cyan-400 transition-colors text-balance drop-shadow-lg font-heading">
+                  <h1 className="text-3xl md:text-6xl font-extrabold leading-tight text-white group-hover:text-cyan-400 transition-colors text-balance drop-shadow-lg font-heading">
                     {getTitle(mainLead)}
                   </h1>
                 </div>
@@ -309,18 +305,16 @@ export default async function HomePage() {
 
       </section>
 
+      <MultimediaVideo />
+      
+      <TechInsights articles={articles.slice(9, 13)} />
+
+      <div className="my-10">
+        <DynamicAd position="between_sections" />
+      </div>
+
       {/* Bottom Ad Leaderboard */}
-      <a href="https://nikolavinci.com" target="_blank" rel="noopener noreferrer" className="w-full h-24 sm:h-32 bg-gradient-to-r from-zinc-900 via-black to-zinc-900 border border-zinc-800 flex items-center justify-between px-8 mb-12 relative group overflow-hidden rounded-xl">
-        <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1550745165-9bc0b252726f?q=80&w=1200&auto=format&fit=crop')] opacity-20 group-hover:opacity-30 transition-opacity bg-cover bg-center mix-blend-overlay"></div>
-        <div className="relative z-10 flex flex-col justify-center">
-          <span className="text-white font-extrabold text-xl sm:text-3xl leading-tight tracking-tight">Transform Your Digital Presence</span>
-          <span className="text-zinc-400 text-sm sm:text-base font-medium">Nikola Vinci custom website solutions. Get a free consultation today.</span>
-        </div>
-        <div className="relative z-10 hidden sm:block">
-          <span className="px-6 py-3 bg-white text-black font-bold uppercase tracking-wider rounded-sm group-hover:bg-primary group-hover:text-white transition-colors">Contact Us</span>
-        </div>
-        <div className="absolute top-1 right-1 px-1 bg-black/50 text-[10px] text-zinc-500 uppercase rounded z-10">Ad</div>
-      </a>
+      <AdBannerBottom />
 
     </div>
   );
