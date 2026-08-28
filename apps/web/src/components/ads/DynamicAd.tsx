@@ -22,7 +22,8 @@ export function DynamicAd({ position }: { position: "top" | "bottom" | "between_
       try {
         const baseApiUrl = process.env.NEXT_PUBLIC_API_URL || "https://api.neptechbrief.com/wp-json/wp/v2";
         const apiUrl = baseApiUrl.replace(/\/wp\/v2\/?$/, '');
-        const res = await fetch(`${apiUrl}/neptech/v1/ads?position=${position}`);
+        // Fetch from /promos instead of /ads to prevent adblockers from blocking the JSON payload. Also added cache busting.
+        const res = await fetch(`${apiUrl}/neptech/v1/promos?position=${position}&t=${Date.now()}`, { cache: 'no-store' });
         
         if (res.ok) {
           const data = await res.json();
