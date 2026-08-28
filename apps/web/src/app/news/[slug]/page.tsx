@@ -66,7 +66,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 }
 
 export async function generateStaticParams() {
-  const { data: articles } = await fetchArticles(1, 2000);
+  const { data: articles } = await fetchArticles(1, 100);
   return articles.map((article: any) => ({
     slug: article.slug,
   }));

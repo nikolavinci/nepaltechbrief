@@ -6,6 +6,7 @@ import { authConfig } from './auth.config';
 
 export const { auth, signIn, signOut, handlers } = NextAuth({
   ...authConfig,
+  trustHost: true,
   providers: [
     Google({
       clientId: process.env.GOOGLE_CLIENT_ID || 'dummy',
@@ -18,7 +19,7 @@ export const { auth, signIn, signOut, handlers } = NextAuth({
     Credentials({
       async authorize(credentials) {
         try {
-          const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000/api'}/auth/login`, {
+          const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://api.neptechbrief.com/wp-json/wp/v2'}/auth/login`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(credentials),
@@ -46,7 +47,7 @@ export const { auth, signIn, signOut, handlers } = NextAuth({
       if (account && (account.provider === 'google' || account.provider === 'facebook')) {
         // Ping Laravel backend to sync user and get Sanctum token
         try {
-          const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000/api'}/auth/social-login`, {
+          const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://api.neptechbrief.com/wp-json/wp/v2'}/auth/social-login`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({

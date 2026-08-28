@@ -1,4 +1,4 @@
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000/wp-json/wp/v2';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://api.neptechbrief.com/wp-json/wp/v2';
 
 export interface Category {
   id: number;
