@@ -148,7 +148,7 @@ export default async function NewsArticlePage({ params }: { params: Promise<{ sl
 
   const authorName = article.author?.name || 'Editor';
   const authorSlug = article.author?.slug || authorName.toLowerCase().replace(/[^a-z0-9]+/g, '-');
-  const authorImage = article.author?.avatar_url || `/nepaltechbrief/storage/authors/${authorSlug}.jpg`;
+  const authorImage = article.author?.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(authorName)}&background=e2e8f0&color=64748b&bold=true&size=150`;
   const authorDesc = article.author?.description || `${authorName} प्रविधि र डिजिटल अर्थतन्त्रमा विशेषज्ञता हासिल गरेका एक अनुभवी पत्रकार हुन्। उनले पछिल्लो समयमा नेपालको स्टार्टअप इकोसिस्टम र प्रविधि क्षेत्रमा भइरहेका परिवर्तनहरूलाई नजिकबाट नियालिरहेका छन्।`;
 
   return (

@@ -30,7 +30,7 @@ export default async function AuthorProfilePage({
   if (author.avatar_urls) {
     authorImage = author.avatar_urls['96'] || author.avatar_urls['48'] || author.avatar_urls['24'];
   } else {
-    authorImage = `https://placehold.co/150x150/eeeeee/999999?text=${authorName.charAt(0)}`;
+    authorImage = `https://ui-avatars.com/api/?name=${encodeURIComponent(authorName)}&background=e2e8f0&color=64748b&bold=true&size=150`;
   }
   
   // Extract role if available in WordPress (if exposed via REST API, often under 'roles')
