@@ -215,3 +215,16 @@ export async function fetchArticlesByAuthor(authorId: number, page: number = 1, 
     return { data: [], current_page: page, last_page: page, total: 0 };
   }
 }
+
+export async function fetchTeamMembers() {
+  try {
+    const res = await fetch("/team_member?per_page=100&orderby=menu_order&order=asc", {
+      next: { revalidate: 60 }
+    });
+    if (!res.ok) return [];
+    return await res.json();
+  } catch (error) {
+    console.error('Error fetching team members:', error);
+    return [];
+  }
+}
