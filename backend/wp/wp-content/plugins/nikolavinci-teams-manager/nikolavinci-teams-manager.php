@@ -1,6 +1,6 @@
 <?php
 /**
- * Plugin Name: NepTech Team Manager
+ * Plugin Name: NikolaVinci Teams Manager
  * Description: Manages the editorial team members and exposes them to the Next.js frontend via REST API.
  * Version: 1.0.0
  * Author: Aanshhuu
@@ -86,3 +86,4 @@ add_action('rest_api_init', function() {
         }
     ]);
 });
+
