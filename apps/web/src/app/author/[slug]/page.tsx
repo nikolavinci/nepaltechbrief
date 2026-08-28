@@ -55,20 +55,31 @@ export default async function AuthorProfilePage({
   };
 
   const getTitle = (item: any) => {
-    if (!item) return 'लेख लोड हुँदैछ...';
+    if (!item) return 'शीर्षक उपलब्ध छैन...';
     return item.title_np || item.title_en;
+  };
+
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'Person',
+    name: authorName,
+    url: `https://neptechbrief.com/author/${slug}`,
+    image: authorImage,
+    description: author.description || undefined,
+    jobTitle: authorRole
   };
 
   return (
     <div className="container mx-auto px-4 py-12 max-w-6xl min-h-[70vh]">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       
       {/* Author Bio Section */}
       <section className="bg-muted/30 p-8 rounded-2xl border border-border/50 shadow-sm mb-12 flex flex-col md:flex-row items-center md:items-start gap-8">
-        <div className="w-40 h-40 rounded-full overflow-hidden border-4 border-background shadow-lg flex-shrink-0 bg-card p-4">
+        <div className="w-40 h-40 rounded-full overflow-hidden border-4 border-background shadow-lg flex-shrink-0 bg-card">
           <img 
             src={authorImage} 
             alt={authorName} 
-            className="object-contain w-full h-full drop-shadow-md"
+            className="object-cover w-full h-full drop-shadow-md"
           />
         </div>
         

@@ -107,7 +107,7 @@ export default async function NewsArticlePage({ params }: { params: Promise<{ sl
       name: 'NepTechBrief',
       logo: {
         '@type': 'ImageObject',
-        url: 'https://neptechbrief.com/nepaltechbrief.png'
+        url: 'https://neptechbrief.com/logo.png'
       }
     }
   };

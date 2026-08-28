@@ -1,15 +1,14 @@
 import { MetadataRoute } from 'next';
-export const dynamic = 'force-static';
 
 export default function robots(): MetadataRoute.Robots {
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
-
   return {
     rules: {
       userAgent: '*',
       allow: '/',
-      disallow: ['/en/admin', '/np/admin', '/api/'],
     },
-    sitemap: `${baseUrl}/sitemap.xml`,
+    sitemap: [
+      'https://neptechbrief.com/sitemap.xml',
+      'https://neptechbrief.com/news-sitemap.xml',
+    ],
   };
 }
