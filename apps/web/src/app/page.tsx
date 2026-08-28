@@ -5,8 +5,6 @@ import { WebStories } from "@/components/home/WebStories";
 import { OpinionEditorials } from "@/components/home/OpinionEditorials";
 import { MultimediaVideo } from "@/components/home/MultimediaVideo";
 import { TechInsights } from "@/components/home/TechInsights";
-import { AdBannerTop } from "@/components/ads/AdBannerTop";
-import { AdBannerBottom } from "@/components/ads/AdBannerBottom";
 import { DynamicAd } from "@/components/ads/DynamicAd";
 import { fetchArticles } from '@/lib/api';
 
@@ -43,9 +41,7 @@ export default async function HomePage() {
   return (
     <div className="container max-w-[1400px] mx-auto px-4 py-6">
 
-      {/* Top Ad Leaderboard */}
-      <AdBannerTop />
-
+      
       {/* Main Orchestration Grid */}
       <div className="grid grid-cols-1 xl:grid-cols-12 gap-8 mb-12">
         
@@ -313,9 +309,8 @@ export default async function HomePage() {
         <DynamicAd position="between_sections" />
       </div>
 
-      {/* Bottom Ad Leaderboard */}
-      <AdBannerBottom />
-
+      
     </div>
   );
 }
+

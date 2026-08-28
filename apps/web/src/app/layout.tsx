@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { Inter, Noto_Sans_Devanagari, Mukta } from "next/font/google";
 import "./globals.css";
 import { Header } from "@/components/layout/Header";
+import { AdBannerTop } from "@/components/ads/AdBannerTop";
+import { AdBannerBottom } from "@/components/ads/AdBannerBottom";
 import { Footer } from "@/components/layout/Footer";
 import { ThemeProvider } from "@/components/theme-provider";
 
@@ -63,12 +65,19 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <Header />
+          <div className="container max-w-[1400px] mx-auto px-4 py-4">
+            <AdBannerTop />
+          </div>
           <main className="flex-grow">
             {children}
           </main>
+          <div className="container max-w-[1400px] mx-auto px-4 py-4">
+            <AdBannerBottom />
+          </div>
           <Footer />
         </ThemeProvider>
       </body>
     </html>
   );
 }
+
