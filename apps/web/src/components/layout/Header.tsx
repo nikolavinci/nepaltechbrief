@@ -10,6 +10,7 @@ export function Header() {
   const router = useRouter();
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -69,19 +70,26 @@ export function Header() {
           {/* Mobile Menu Toggle */}
           <div className="lg:hidden relative">
             <button 
-              className="p-2 border rounded-md hover:bg-muted transition-colors text-muted-foreground peer"
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              className="p-2 border rounded-md hover:bg-muted transition-colors text-muted-foreground"
               aria-label="Toggle Mobile Menu"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="18" y2="18"/></svg>
+              {isMobileMenuOpen ? (
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              ) : (
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="18" y2="18"/></svg>
+              )}
             </button>
-            <nav className="absolute right-0 top-full mt-2 w-48 bg-background border rounded-lg shadow-xl z-50 flex flex-col p-2 hidden peer-focus-within:flex hover:flex opacity-0 peer-focus-within:opacity-100 hover:opacity-100 transition-opacity">
-              <Link href={`/category/tech-news`} className="p-3 hover:bg-muted rounded-md transition-colors text-sm font-semibold">टेक न्युज</Link>
-              <Link href={`/category/gadgets`} className="p-3 hover:bg-muted rounded-md transition-colors text-sm font-semibold">ग्याजेट्स</Link>
-              <Link href={`/category/apps-software`} className="p-3 hover:bg-muted rounded-md transition-colors text-sm font-semibold">एप्स र सफ्टवेयर</Link>
-              <Link href={`/category/telecom`} className="p-3 hover:bg-muted rounded-md transition-colors text-sm font-semibold">टेलिकम</Link>
-              <Link href={`/category/startups`} className="p-3 hover:bg-muted rounded-md transition-colors text-sm font-semibold">स्टार्टअप</Link>
-              <Link href={`/category/ai`} className="p-3 hover:bg-muted rounded-md transition-colors text-sm font-semibold">ए.आई</Link>
-            </nav>
+            {isMobileMenuOpen && (
+              <nav className="absolute right-0 top-full mt-2 w-48 bg-background border rounded-lg shadow-xl z-50 flex flex-col p-2 animate-in slide-in-from-top-2">
+                <Link onClick={() => setIsMobileMenuOpen(false)} href={`/category/tech-news`} className="p-3 hover:bg-muted rounded-md transition-colors text-sm font-semibold">टेक न्युज</Link>
+                <Link onClick={() => setIsMobileMenuOpen(false)} href={`/category/gadgets`} className="p-3 hover:bg-muted rounded-md transition-colors text-sm font-semibold">ग्याजेट्स</Link>
+                <Link onClick={() => setIsMobileMenuOpen(false)} href={`/category/apps-software`} className="p-3 hover:bg-muted rounded-md transition-colors text-sm font-semibold">एप्स र सफ्टवेयर</Link>
+                <Link onClick={() => setIsMobileMenuOpen(false)} href={`/category/telecom`} className="p-3 hover:bg-muted rounded-md transition-colors text-sm font-semibold">टेलिकम</Link>
+                <Link onClick={() => setIsMobileMenuOpen(false)} href={`/category/startups`} className="p-3 hover:bg-muted rounded-md transition-colors text-sm font-semibold">स्टार्टअप</Link>
+                <Link onClick={() => setIsMobileMenuOpen(false)} href={`/category/ai`} className="p-3 hover:bg-muted rounded-md transition-colors text-sm font-semibold">ए.आई</Link>
+              </nav>
+            )}
           </div>
         </div>
 
