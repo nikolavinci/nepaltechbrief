@@ -3,7 +3,7 @@
  * Plugin Name: NikolaVinci Teams Manager
  * Description: Manages the editorial team members with a detailed profile UI and structured data support.
  * Version: 2.0.0
- * Author: Aanshhuu
+ * Author: NikolaVinci
  */
 
 if ( ! defined( 'ABSPATH' ) ) exit;
@@ -131,14 +131,14 @@ function team_member_meta_html($post) {
 // 4. Save Meta
 add_action('save_post', function($post_id) {
     if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) return;
-     = ['first_name', 'last_name', 'designation', 'email', 'facebook', 'twitter', 'linkedin', 'short_bio', 'detailed_bio', 'profile_picture', 'image_gallery'];
-    foreach ( as ) {
-        if (isset($_POST[])) {
-             = $_POST[];
-            if (in_array(, ['facebook', 'twitter', 'linkedin', 'profile_picture']))  = esc_url_raw();
-            elseif ( === 'detailed_bio')  = wp_kses_post();
-            else  = sanitize_text_field();
-            update_post_meta($post_id, , );
+    $fields = ['first_name', 'last_name', 'designation', 'email', 'facebook', 'twitter', 'linkedin', 'short_bio', 'detailed_bio', 'profile_picture', 'image_gallery'];
+    foreach ($fields as $f) {
+        if (isset($_POST[$f])) {
+            $val = $_POST[$f];
+            if (in_array($f, ['facebook', 'twitter', 'linkedin', 'profile_picture'])) $val = esc_url_raw($val);
+            elseif ($f === 'detailed_bio') $val = wp_kses_post($val);
+            else $val = sanitize_text_field($val);
+            update_post_meta($post_id, $f, $val);
         }
     }
 });
