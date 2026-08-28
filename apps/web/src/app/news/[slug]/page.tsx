@@ -169,7 +169,7 @@ export default async function NewsArticlePage({ params }: { params: Promise<{ sl
           </Link>
           <span className="text-muted-foreground text-sm">•</span>
           <time className="text-muted-foreground text-sm">
-            {new Date().toLocaleDateString('ne-NP', { 
+            {new Date(article.published_at || article.created_at || Date.now()).toLocaleDateString('ne-NP', { 
               year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' 
             })}
           </time>
