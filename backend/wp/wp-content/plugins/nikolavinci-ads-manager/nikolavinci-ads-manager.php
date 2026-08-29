@@ -3,7 +3,7 @@
  * Plugin Name: Content Automaton Ads Manager
  * Plugin URI: https://nikolavinci.com
  * Description: Advanced ad management. Third-party support (AdSense/Ezoic), UI analytics, position toggles, and responsive ad slots.
- * Version: 2.1.0
+ * Version: 2.2.0
  * Author: nikolavinci
  * Author URI: https://nikolavinci.com
  */
@@ -135,26 +135,19 @@ function neptech_ads_analytics_page() {
         <p>Turn off specific ad zones across the entire website.</p>
         <form method="POST">
             <table class="form-table">
-                <tr>
-                    <th><label>Top Banner (Header)</label></th>
-                    <td><input type="checkbox" name="pos_top" value="1" <?php checked(!empty($settings['top'])); ?> /> Enabled</td>
-                </tr>
-                <tr>
-                    <th><label>Between Sections (Homepage)</label></th>
-                    <td><input type="checkbox" name="pos_between_sections" value="1" <?php checked(!empty($settings['between_sections'])); ?> /> Enabled</td>
-                </tr>
-                <tr>
-                    <th><label>Article Mid-Section (Inside Posts)</label></th>
-                    <td><input type="checkbox" name="pos_article_mid" value="1" <?php checked(!empty($settings['article_mid'])); ?> /> Enabled</td>
-                </tr>
-                <tr>
-                    <th><label>Sidebar Native (Widgets)</label></th>
-                    <td><input type="checkbox" name="pos_sidebar" value="1" <?php checked(!empty($settings['sidebar'])); ?> /> Enabled</td>
-                </tr>
-                <tr>
-                    <th><label>Bottom Banner (Footer)</label></th>
-                    <td><input type="checkbox" name="pos_bottom" value="1" <?php checked(!empty($settings['bottom'])); ?> /> Enabled</td>
-                </tr>
+                <tr><th><label>Top Banner (Header)</label></th><td><input type="checkbox" name="pos_top" value="1" <?php checked(!empty($settings['top'])); ?> /> Enabled</td></tr>
+                <tr><th><label>Between Sections (Homepage)</label></th><td><input type="checkbox" name="pos_between_sections" value="1" <?php checked(!empty($settings['between_sections'])); ?> /> Enabled</td></tr>
+                <tr><th><label>Sidebar Native (Widgets)</label></th><td><input type="checkbox" name="pos_sidebar" value="1" <?php checked(!empty($settings['sidebar'])); ?> /> Enabled</td></tr>
+                
+                <tr><th colspan="2" style="background:#e2e8f0; padding:10px;">Article Inner Ads</th></tr>
+                <tr><th><label>Ad 1: Below the Title</label></th><td><input type="checkbox" name="pos_ad_below_title_1" value="1" <?php checked(!empty($settings['ad_below_title_1'])); ?> /> Enabled</td></tr>
+                <tr><th><label>Ad 2: Below Ad 1</label></th><td><input type="checkbox" name="pos_ad_below_title_2" value="1" <?php checked(!empty($settings['ad_below_title_2'])); ?> /> Enabled</td></tr>
+                <tr><th><label>Ad 3: Below Featured Image</label></th><td><input type="checkbox" name="pos_ad_below_featured_1" value="1" <?php checked(!empty($settings['ad_below_featured_1'])); ?> /> Enabled</td></tr>
+                <tr><th><label>Ad 4: Below Ad 3</label></th><td><input type="checkbox" name="pos_ad_below_featured_2" value="1" <?php checked(!empty($settings['ad_below_featured_2'])); ?> /> Enabled</td></tr>
+                <tr><th><label>Ad 5: Square Mid-Article 1</label></th><td><input type="checkbox" name="pos_ad_mid_1" value="1" <?php checked(!empty($settings['ad_mid_1'])); ?> /> Enabled</td></tr>
+                <tr><th><label>Ad 6: Square Mid-Article 2</label></th><td><input type="checkbox" name="pos_ad_mid_2" value="1" <?php checked(!empty($settings['ad_mid_2'])); ?> /> Enabled</td></tr>
+                <tr><th><label>Ad 7: End of Article (Below Author)</label></th><td><input type="checkbox" name="pos_ad_bottom_1" value="1" <?php checked(!empty($settings['ad_bottom_1'])); ?> /> Enabled</td></tr>
+                <tr><th><label>Ad 8: Below Ad 7</label></th><td><input type="checkbox" name="pos_ad_bottom_2" value="1" <?php checked(!empty($settings['ad_bottom_2'])); ?> /> Enabled</td></tr>
             </table>
             <input type="hidden" name="neptech_save_settings" value="1" />
             <button type="submit" class="button button-primary" style="margin-top:15px;">Save Settings</button>
@@ -194,17 +187,24 @@ function neptech_ad_meta_box_html( $post ) {
     <div class="neptech-ad-panel">
         <h4>1. Ad Placement & Strategy</h4>
         <div class="neptech-form-group">
-            <label>Select Ad Position (Specifies responsive dimensions on frontend)</label>
-            <select name="ad_position">
-                <option value="top" <?php selected($position, 'top'); ?>>Top Banner (Responsive: Full width, Max Height 130px)</option>
-                <option value="between_sections" <?php selected($position, 'between_sections'); ?>>Between Sections (Responsive: Full width, Max Height 130px)</option>
-                <option value="article_mid" <?php selected($position, 'article_mid'); ?>>Article Mid-Section (Responsive: Inside content, 100% width)</option>
-                <option value="sidebar" <?php selected($position, 'sidebar'); ?>>Sidebar Native (Responsive: Square/Vertical, Aspect 4:3 or 1:1)</option>
-                <option value="bottom" <?php selected($position, 'bottom'); ?>>Bottom Banner (Responsive: Full width, Max Height 130px)</option>
-            </select>
+            <label>Select Ad Positions (Check all that apply)</label>
+            <?php $positions = is_array($position) ? $position : ( $position ? [$position] : [] ); ?>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top:10px;">
+                <label><input type="checkbox" name="ad_position[]" value="top" <?php checked(in_array('top', $positions)); ?>> Top Banner (Header)</label>
+                <label><input type="checkbox" name="ad_position[]" value="between_sections" <?php checked(in_array('between_sections', $positions)); ?>> Between Sections (Homepage)</label>
+                <label><input type="checkbox" name="ad_position[]" value="sidebar" <?php checked(in_array('sidebar', $positions)); ?>> Sidebar Native</label>
+                
+                <label><input type="checkbox" name="ad_position[]" value="ad_below_title_1" <?php checked(in_array('ad_below_title_1', $positions)); ?>> Ad 1 (Below Title)</label>
+                <label><input type="checkbox" name="ad_position[]" value="ad_below_title_2" <?php checked(in_array('ad_below_title_2', $positions)); ?>> Ad 2 (Below Ad 1)</label>
+                <label><input type="checkbox" name="ad_position[]" value="ad_below_featured_1" <?php checked(in_array('ad_below_featured_1', $positions)); ?>> Ad 3 (Below Featured Image)</label>
+                <label><input type="checkbox" name="ad_position[]" value="ad_below_featured_2" <?php checked(in_array('ad_below_featured_2', $positions)); ?>> Ad 4 (Below Ad 3)</label>
+                <label><input type="checkbox" name="ad_position[]" value="ad_mid_1" <?php checked(in_array('ad_mid_1', $positions)); ?>> Ad 5 (Square Mid-Article 1)</label>
+                <label><input type="checkbox" name="ad_position[]" value="ad_mid_2" <?php checked(in_array('ad_mid_2', $positions)); ?>> Ad 6 (Square Mid-Article 2)</label>
+                <label><input type="checkbox" name="ad_position[]" value="ad_bottom_1" <?php checked(in_array('ad_bottom_1', $positions)); ?>> Ad 7 (Below Author Box)</label>
+                <label><input type="checkbox" name="ad_position[]" value="ad_bottom_2" <?php checked(in_array('ad_bottom_2', $positions)); ?>> Ad 8 (Below Ad 7)</label>
+            </div>
         </div>
     </div>
-
     <div class="neptech-ad-panel">
         <h4>2. Creative Type</h4>
         <div class="neptech-form-group" style="display: flex; gap: 15px;">
@@ -276,7 +276,12 @@ add_action( 'save_post', function( $post_id ) {
     if ( isset( $_POST['ad_image_url'] ) ) update_post_meta( $post_id, '_ad_image', esc_url_raw($_POST['ad_image_url']) );
     if ( isset( $_POST['ad_mobile_image_url'] ) ) update_post_meta( $post_id, '_ad_image_mobile', esc_url_raw($_POST['ad_mobile_image_url']) );
     if ( isset( $_POST['ad_code'] ) ) update_post_meta( $post_id, '_ad_code', $_POST['ad_code'] ); // allow html/js
-    if ( isset( $_POST['ad_position'] ) ) update_post_meta( $post_id, '_ad_position', sanitize_text_field($_POST['ad_position']) );
+    if ( isset( $_POST['ad_position'] ) && is_array($_POST['ad_position']) ) {
+        $clean_positions = array_map('sanitize_text_field', $_POST['ad_position']);
+        update_post_meta( $post_id, '_ad_position', $clean_positions );
+    } else {
+        delete_post_meta( $post_id, '_ad_position' );
+    }
 });
 
 // 5. REST Endpoints
