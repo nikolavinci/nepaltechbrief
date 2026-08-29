@@ -3,7 +3,7 @@
  * Plugin Name: Content Automaton Ads Manager
  * Plugin URI: https://nikolavinci.com
  * Description: Advanced ad management. Third-party support (AdSense/Ezoic), UI analytics, position toggles, and responsive ad slots.
- * Version: 2.0.0
+ * Version: 2.1.0
  * Author: nikolavinci
  * Author URI: https://nikolavinci.com
  */
@@ -38,16 +38,26 @@ add_action( 'admin_enqueue_scripts', function($hook) {
                 $("#upload_image_button").click(function(e) {
                     e.preventDefault();
                     if (mediaUploader) { mediaUploader.open(); return; }
-                    mediaUploader = wp.media.frames.file_frame = wp.media({
-                        title: "Choose Ad Creative",
-                        button: { text: "Use this image" }, multiple: false
-                    });
+                    mediaUploader = wp.media.frames.file_frame = wp.media({ title: "Choose Desktop Image" });
                     mediaUploader.on("select", function() {
                         var attachment = mediaUploader.state().get("selection").first().toJSON();
                         $("#ad_image_url").val(attachment.url);
                         $("#ad_image_preview").attr("src", attachment.url).show();
                     });
                     mediaUploader.open();
+                });
+
+                var mediaUploaderMobile;
+                $("#upload_mobile_image_button").click(function(e) {
+                    e.preventDefault();
+                    if (mediaUploaderMobile) { mediaUploaderMobile.open(); return; }
+                    mediaUploaderMobile = wp.media.frames.file_frame = wp.media({ title: "Choose Mobile Image" });
+                    mediaUploaderMobile.on("select", function() {
+                        var attachment = mediaUploaderMobile.state().get("selection").first().toJSON();
+                        $("#ad_mobile_image_url").val(attachment.url);
+                        $("#ad_mobile_image_preview").attr("src", attachment.url).show();
+                    });
+                    mediaUploaderMobile.open();
                 });
                 
                 // Toggle Fields based on Ad Type
@@ -162,6 +172,7 @@ function neptech_ad_meta_box_html( $post ) {
     $type = get_post_meta( $post->ID, '_ad_type', true ) ?: 'image';
     $link = get_post_meta( $post->ID, '_ad_link', true );
     $image = get_post_meta( $post->ID, '_ad_image', true );
+    $image_mobile = get_post_meta( $post->ID, '_ad_image_mobile', true );
     $code = get_post_meta( $post->ID, '_ad_code', true );
     $position = get_post_meta( $post->ID, '_ad_position', true );
     $views = (int) get_post_meta( $post->ID, '_ad_views', true );
@@ -204,12 +215,20 @@ function neptech_ad_meta_box_html( $post ) {
         <!-- IMAGE GROUP -->
         <div class="type-image-group">
             <div class="neptech-form-group">
-                <label>Upload Creative (Image or GIF)</label>
+                <label>Upload Desktop Creative (Image or GIF)</label>
                 <div style="display:flex; gap:10px;">
                     <input type="url" id="ad_image_url" name="ad_image_url" value="<?php echo esc_attr($image); ?>" placeholder="https://..." style="flex:1;" />
                     <button type="button" class="button" id="upload_image_button">Browse / Upload</button>
                 </div>
                 <img id="ad_image_preview" src="<?php echo esc_attr($image); ?>" style="max-width: 100%; max-height: 200px; margin-top: 15px; border-radius: 4px; border: 1px solid #ccc; display: <?php echo $image ? 'block' : 'none'; ?>;" />
+            </div>
+            <div class="neptech-form-group" style="margin-top: 20px; padding-top: 15px; border-top: 1px dashed #cbd5e1;">
+                <label>Upload Mobile Creative (Optional Image or GIF for Phones)</label>
+                <div style="display:flex; gap:10px;">
+                    <input type="url" id="ad_mobile_image_url" name="ad_mobile_image_url" value="<?php echo esc_attr($image_mobile); ?>" placeholder="https://..." style="flex:1;" />
+                    <button type="button" class="button" id="upload_mobile_image_button">Browse / Upload</button>
+                </div>
+                <img id="ad_mobile_image_preview" src="<?php echo esc_attr($image_mobile); ?>" style="max-width: 100%; max-height: 200px; margin-top: 15px; border-radius: 4px; border: 1px solid #ccc; display: <?php echo $image_mobile ? 'block' : 'none'; ?>;" />
             </div>
             <div class="neptech-form-group">
                 <label>Target URL (Where should users go when they click?)</label>
@@ -255,6 +274,7 @@ add_action( 'save_post', function( $post_id ) {
     if ( isset( $_POST['ad_type'] ) ) update_post_meta( $post_id, '_ad_type', sanitize_text_field($_POST['ad_type']) );
     if ( isset( $_POST['ad_link'] ) ) update_post_meta( $post_id, '_ad_link', sanitize_text_field($_POST['ad_link']) );
     if ( isset( $_POST['ad_image_url'] ) ) update_post_meta( $post_id, '_ad_image', esc_url_raw($_POST['ad_image_url']) );
+    if ( isset( $_POST['ad_mobile_image_url'] ) ) update_post_meta( $post_id, '_ad_image_mobile', esc_url_raw($_POST['ad_mobile_image_url']) );
     if ( isset( $_POST['ad_code'] ) ) update_post_meta( $post_id, '_ad_code', $_POST['ad_code'] ); // allow html/js
     if ( isset( $_POST['ad_position'] ) ) update_post_meta( $post_id, '_ad_position', sanitize_text_field($_POST['ad_position']) );
 });
@@ -310,6 +330,7 @@ function neptech_get_ads_api( $request ) {
         'type' => $type,
         'title' => $ad->post_title,
         'image_url' => get_post_meta( $ad->ID, '_ad_image', true ),
+        'image_mobile_url' => get_post_meta( $ad->ID, '_ad_image_mobile', true ),
         'code' => get_post_meta( $ad->ID, '_ad_code', true ),
         'click_url' => get_rest_url( null, 'neptech/v1/promos/click/' . $ad->ID )
     ]);
@@ -385,3 +406,4 @@ function neptech_ad_guidelines_html($post) {
     </div>
     <?php
 }
+

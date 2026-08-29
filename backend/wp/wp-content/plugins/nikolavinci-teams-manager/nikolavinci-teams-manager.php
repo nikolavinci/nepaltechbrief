@@ -2,7 +2,7 @@
 /**
  * Plugin Name: NikolaVinci Teams Manager
  * Description: Manages the editorial team members with a detailed profile UI and structured data support.
- * Version: 2.0.0
+ * Version: 2.1.0
  * Author: NikolaVinci
  */
 
@@ -165,3 +165,4 @@ add_action('rest_api_init', function() {
         }
     ]);
 });
+
