@@ -1,187 +1,375 @@
-<?php
-/**
- * Plugin Name: NikolaVinci Teams Manager
- * Description: Manages the editorial team members with a detailed profile UI and structured data support.
- * Version: 2.4.0
- * Author: NikolaVinci
- */
+﻿<?php
+/*
+Plugin Name: NepTechBrief Teams & Entity Manager
+Description: Advanced Entity Home & Teams Manager. Creates dedicated Person entities with comprehensive Schema.org JSON-LD support for AEO, GEO, and AI search optimization.
+Version: 3.0.0
+Author: NikolaVinci
+*/
 
-if ( ! defined( 'ABSPATH' ) ) exit;
+if (!defined('ABSPATH')) exit;
 
-// 1. Register CPT (No editor, no thumbnail standard UI)
-add_action( 'init', function() {
-    register_post_type( 'team_member', [
-        'labels' => [
-            'name' => 'Team Members',
-            'singular_name' => 'Team Member',
-            'add_new' => 'Add New Member',
-            'edit_item' => 'Edit Member Profile'
-        ],
-        'public' => true,
-        'show_in_rest' => true,
-        'menu_icon' => 'dashicons-businessperson',
-        'supports' => ['title', 'page-attributes'], // We handle everything else via custom meta box
-    ]);
-});
+class NepTech_Entity_Manager {
 
-// 2. Enqueue Media Uploader scripts
-add_action('admin_enqueue_scripts', function($hook) {
-    global $post;
-    if (($hook == 'post.php' || $hook == 'post-new.php') && $post->post_type == 'team_member') {
-        wp_enqueue_media();
-        wp_enqueue_script('nikolavinci-teams-media', plugin_dir_url(__FILE__) . 'admin.js', ['jquery'], '1.0', true);
+    public function __construct() {
+        add_action('init', [$this, 'register_cpt']);
+        add_action('add_meta_boxes', [$this, 'add_meta_boxes']);
+        add_action('save_post', [$this, 'save_meta_boxes']);
+        add_action('admin_enqueue_scripts', [$this, 'enqueue_admin_assets']);
+        add_action('rest_api_init', [$this, 'register_rest_routes']);
+        
+        // Disable Gutenberg for this CPT to enforce structured data entry
+        add_filter('use_block_editor_for_post_type', function($use, $post_type) {
+            if ('neptech_team_member' === $post_type) return false;
+            return $use;
+        }, 10, 2);
     }
-});
 
-// 3. Add Custom Meta Box
-add_action('add_meta_boxes', function() {
-    add_meta_box('team_member_profile', 'Profile Details', 'team_member_meta_html', 'team_member', 'normal', 'high');
-});
+    public function register_cpt() {
+        register_post_type('neptech_team_member', [
+            'labels' => [
+                'name' => 'Team Entities',
+                'singular_name' => 'Team Member',
+                'add_new_item' => 'Add New Team Member',
+                'edit_item' => 'Edit Team Member',
+            ],
+            'public' => true,
+            'show_in_rest' => true,
+            'supports' => ['title', 'thumbnail'],
+            'menu_icon' => 'dashicons-groups',
+            'has_archive' => false,
+            'rewrite' => ['slug' => 'team'],
+        ]);
+    }
 
-function team_member_meta_html($post) {
-    $meta = get_post_meta($post->ID);
-    
-    $first_name = $meta['first_name'][0] ?? '';
-    $last_name = $meta['last_name'][0] ?? '';
-    $designation = $meta['designation'][0] ?? '';
-    $email = $meta['email'][0] ?? '';
-    $facebook = $meta['facebook'][0] ?? '';
-    $twitter = $meta['twitter'][0] ?? '';
-    $linkedin = $meta['linkedin'][0] ?? '';
-    $short_bio = $meta['short_bio'][0] ?? '';
-    $detailed_bio = $meta['detailed_bio'][0] ?? '';
-    $profile_picture = $meta['profile_picture'][0] ?? '';
-    $image_gallery = $meta['image_gallery'][0] ?? '';
-    ?>
-    <style>
-        .nv-team-row { display: flex; gap: 20px; margin-bottom: 15px; }
-        .nv-team-col { flex: 1; }
-        .nv-team-col label { font-weight: bold; display: block; margin-bottom: 5px; }
-        .nv-team-col input[type="text"], .nv-team-col input[type="email"], .nv-team-col input[type="url"], .nv-team-col textarea { width: 100%; }
-        .nv-media-preview img { max-width: 150px; height: auto; display: block; margin-top: 10px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-    </style>
-    
-    <div class="nv-team-row">
-        <div class="nv-team-col nv-media-preview" style="flex: 0 0 150px; text-align:center;">
-            <label style="display:block; margin-bottom:10px;">Profile Picture</label>
-            <input type="hidden" name="profile_picture" id="profile_picture" value="<?php echo esc_attr($profile_picture); ?>">
-            <div class="nv-upload-trigger" data-target="#profile_picture" style="cursor:pointer; width:120px; height:120px; border-radius:50%; border:2px dashed #cbd5e1; background:#f8fafc; margin:0 auto; overflow:hidden; position:relative; display:flex; align-items:center; justify-content:center;">
-                <?php if ($profile_picture): ?>
-                    <img src="<?php echo esc_url($profile_picture); ?>" style="width:100%; height:100%; object-fit:cover;">
-                <?php else: ?>
-                    <svg style="width:40px; height:40px; color:#94a3b8;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
-                <?php endif; ?>
+    public function enqueue_admin_assets($hook) {
+        global $post_type;
+        if ('neptech_team_member' === $post_type) {
+            wp_enqueue_media();
+            // We will inline the JS/CSS for simplicity and robustness
+        }
+    }
+
+    public function add_meta_boxes() {
+        add_meta_box('neptech_entity_data', 'Person Entity Data', [$this, 'render_meta_box'], 'neptech_team_member', 'normal', 'high');
+        add_meta_box('neptech_entity_score', 'Entity Completeness Score', [$this, 'render_score_box'], 'neptech_team_member', 'side', 'high');
+    }
+
+    public function render_score_box($post) {
+        // We will calculate this dynamically in JS based on filled fields, but provide a basic container
+        echo '<div id="entity-completeness-gauge" style="text-align:center; padding:10px;">
+                <div style="font-size:32px; font-weight:bold; color:#10b981;" id="score-number">0%</div>
+                <div style="font-size:12px; color:#64748b;">Entity Completeness</div>
+                <hr style="margin:10px 0;">
+                <ul style="text-align:left; font-size:11px; margin:0; padding-left:15px;" id="score-breakdown">
+                </ul>
+              </div>';
+    }
+
+    public function render_meta_box($post) {
+        wp_nonce_field('neptech_entity_save', 'neptech_entity_nonce');
+        
+        // Fetch all granular meta
+        $m = get_post_meta($post->ID);
+        $get = function($k) use ($m) { return isset($m[$k][0]) ? $m[$k][0] : ''; };
+        
+        // Decode JSON arrays
+        $same_as = json_decode($get('_entity_same_as'), true) ?: [];
+        $education = json_decode($get('_entity_education'), true) ?: [];
+        $awards = json_decode($get('_entity_awards'), true) ?: [];
+        
+        ?>
+        <style>
+            .entity-tabs { display: flex; border-bottom: 1px solid #ccc; margin-bottom: 20px; background: #f8fafc; }
+            .entity-tab { padding: 10px 20px; cursor: pointer; border: 1px solid transparent; border-bottom: none; font-weight: 600; color: #64748b; }
+            .entity-tab.active { background: #fff; border-color: #ccc; color: #0f172a; margin-bottom: -1px; }
+            .entity-panel { display: none; padding: 10px; }
+            .entity-panel.active { display: block; }
+            .nv-form-group { margin-bottom: 15px; }
+            .nv-form-group label { display: block; font-weight: bold; margin-bottom: 5px; }
+            .nv-form-group input[type="text"], .nv-form-group input[type="url"], .nv-form-group select, .nv-form-group textarea { width: 100%; max-width: 600px; }
+            .repeater-row { background: #f1f5f9; padding: 15px; margin-bottom: 10px; border: 1px solid #e2e8f0; position: relative; }
+            .remove-row { position: absolute; top: 10px; right: 10px; color: #ef4444; cursor: pointer; text-decoration: none; font-weight:bold; }
+        </style>
+
+        <div class="entity-tabs">
+            <div class="entity-tab active" data-target="tab-identity">Identity & Bio</div>
+            <div class="entity-tab" data-target="tab-professional">Professional</div>
+            <div class="entity-tab" data-target="tab-external">External Profiles (sameAs)</div>
+            <div class="entity-tab" data-target="tab-education">Education & Awards</div>
+        </div>
+
+        <div id="tab-identity" class="entity-panel active">
+            <div class="nv-form-group">
+                <label>First Name (Given Name)</label>
+                <input type="text" name="first_name" value="<?php echo esc_attr($get('_entity_first_name')); ?>">
             </div>
-            <a href="#" class="nv-remove-btn" data-target="#profile_picture" style="display:inline-block; margin-top:10px; color:#ef4444; text-decoration:none; font-size:12px;">Remove Image</a>
+            <div class="nv-form-group">
+                <label>Last Name (Family Name)</label>
+                <input type="text" name="last_name" value="<?php echo esc_attr($get('_entity_last_name')); ?>">
+            </div>
+            <div class="nv-form-group">
+                <label>Profile Picture URL</label>
+                <div style="display:flex; gap:10px;">
+                    <input type="url" name="profile_picture" id="profile_picture" value="<?php echo esc_attr($get('_entity_profile_picture')); ?>" style="flex:1;">
+                    <button type="button" class="button nv-media-btn" data-target="#profile_picture">Choose Image</button>
+                </div>
+            </div>
+            <div class="nv-form-group">
+                <label>Short Bio (Search Summary)</label>
+                <textarea name="short_bio" rows="3"><?php echo esc_textarea($get('_entity_short_bio')); ?></textarea>
+                <p class="description">A concise 1-2 sentence description used for lists and SEO meta descriptions.</p>
+            </div>
+            <div class="nv-form-group">
+                <label>Full Biography</label>
+                <?php wp_editor($get('_entity_full_bio'), 'full_bio', ['textarea_rows'=>10, 'media_buttons'=>false]); ?>
+                <p class="description">Detailed biography for the entity home page.</p>
+            </div>
         </div>
-        <div class="nv-team-col">
-            <label>First Name</label>
-            <input type="text" name="first_name" value="<?php echo esc_attr($first_name); ?>" style="margin-bottom:15px;">
-            <label>Last Name</label>
-            <input type="text" name="last_name" value="<?php echo esc_attr($last_name); ?>">
-        </div>
-    </div>
-    
-    <div class="nv-team-row">
-        <div class="nv-team-col">
-            <label>Designation / Role</label>
-            <select name="designation" style="width:100%;">
-                <option value="">-- Select Role --</option>
-                <option value="Founder" <?php selected($designation, "Founder"); ?>>Founder</option><option value="CEO" <?php selected($designation, "CEO"); ?>>CEO</option><option value="Founder and CEO" <?php selected($designation, "Founder and CEO"); ?>>Founder and CEO</option><option value="CFO" <?php selected($designation, "CFO"); ?>>CFO</option><option value="CMO" <?php selected($designation, "CMO"); ?>>CMO</option><option value="Director" <?php selected($designation, "Director"); ?>>Director</option><option value="Journalist" <?php selected($designation, "Journalist"); ?>>Journalist</option><option value="Photojournalist" <?php selected($designation, "Photojournalist"); ?>>Photojournalist</option><option value="Editor" <?php selected($designation, "Editor"); ?>>Editor</option><option value="Editor in Chief" <?php selected($designation, "Editor in Chief"); ?>>Editor in Chief</option><option value="Social Media Manager" <?php selected($designation, "Social Media Manager"); ?>>Social Media Manager</option><option value="Author" <?php selected($designation, "Author"); ?>>Author</option><option value="Writer" <?php selected($designation, "Writer"); ?>>Writer</option><option value="Videographer" <?php selected($designation, "Videographer"); ?>>Videographer</option>
-            </select>
-        </div>
-        <div class="nv-team-col">
-            <label>Email Address</label>
-            <input type="email" name="email" value="<?php echo esc_attr($email); ?>">
-        </div>
-    </div>
 
-    <div class="nv-team-row">
-        <div class="nv-team-col">
-            <label>Facebook</label><input type="url" name="facebook" value="<?php echo esc_attr($facebook); ?>">
+        <div id="tab-professional" class="entity-panel">
+            <div class="nv-form-group">
+                <label>Designation / Job Title</label>
+                <select name="designation">
+                    <option value="">-- Select --</option>
+                    <?php 
+                    $roles = ['Founder','CEO','Founder and CEO','CFO','CMO','Director','Journalist','Photojournalist','Editor','Editor in Chief','Social Media Manager','Author','Writer','Videographer'];
+                    foreach($roles as $r) echo '<option value="'.$r.'" '.selected($get('_entity_designation'), $r, false).'>'.$r.'</option>';
+                    ?>
+                </select>
+            </div>
+            <div class="nv-form-group">
+                <label>Areas of Expertise (Comma separated)</label>
+                <input type="text" name="expertise" value="<?php echo esc_attr($get('_entity_expertise')); ?>" placeholder="e.g., Artificial Intelligence, Mobile Hardware, SEO">
+            </div>
+            <div class="nv-form-group">
+                <label>Current Organization</label>
+                <input type="text" name="organization" value="<?php echo esc_attr($get('_entity_organization') ?: 'NepTechBrief'); ?>" readonly>
+                <p class="description">Default is set to the publication. This connects the worksFor Schema.</p>
+            </div>
         </div>
-        <div class="nv-team-col">
-            <label>Twitter / X</label><input type="url" name="twitter" value="<?php echo esc_attr($twitter); ?>">
-        </div>
-        <div class="nv-team-col">
-            <label>LinkedIn</label><input type="url" name="linkedin" value="<?php echo esc_attr($linkedin); ?>">
-        </div>
-    </div>
 
-    <div class="nv-team-row">
-        <div class="nv-team-col">
-            <label>Short Bio (Used for cards and SEO)</label>
-            <textarea name="short_bio" rows="3"><?php echo esc_textarea($short_bio); ?></textarea>
+        <div id="tab-external" class="entity-panel">
+            <p class="description">Add verified external profiles to populate the Schema.org <code>sameAs</code> array. Essential for Entity Disambiguation (Knowledge Graph).</p>
+            <div id="sameas-container">
+                <?php foreach($same_as as $i => $sa): ?>
+                <div class="repeater-row">
+                    <a href="#" class="remove-row">X Remove</a>
+                    <div style="display:flex; gap:10px;">
+                        <select name="same_as_platform[]">
+                            <?php foreach(['LinkedIn','Twitter/X','Facebook','Instagram','Wikipedia','Wikidata','Personal Website','Other'] as $p) echo '<option value="'.$p.'" '.selected($sa['platform'], $p, false).'>'.$p.'</option>'; ?>
+                        </select>
+                        <input type="url" name="same_as_url[]" value="<?php echo esc_attr($sa['url']); ?>" placeholder="https://" style="flex:1;">
+                    </div>
+                </div>
+                <?php endforeach; ?>
+            </div>
+            <button type="button" class="button" id="add-sameas">+ Add Profile</button>
         </div>
-    </div>
 
-    <div class="nv-team-row">
-        <div class="nv-team-col">
-            <label>Detailed Bio</label>
-            <?php wp_editor($detailed_bio, 'detailed_bio', ['textarea_name' => 'detailed_bio', 'media_buttons' => false, 'textarea_rows' => 8]); ?>
+        <div id="tab-education" class="entity-panel">
+            <h3>Education (alumniOf)</h3>
+            <div id="education-container">
+                <?php foreach($education as $i => $ed): ?>
+                <div class="repeater-row">
+                    <a href="#" class="remove-row">X Remove</a>
+                    <input type="text" name="edu_institution[]" value="<?php echo esc_attr($ed['institution']); ?>" placeholder="Institution Name (e.g. Tribhuvan University)" style="margin-bottom:5px; width:100%;"><br>
+                    <input type="text" name="edu_degree[]" value="<?php echo esc_attr($ed['degree']); ?>" placeholder="Degree (e.g. BSc Computer Science)" style="width:100%;">
+                </div>
+                <?php endforeach; ?>
+            </div>
+            <button type="button" class="button" id="add-education">+ Add Education</button>
+
+            <h3 style="margin-top:30px;">Awards</h3>
+            <div id="awards-container">
+                <?php foreach($awards as $i => $aw): ?>
+                <div class="repeater-row">
+                    <a href="#" class="remove-row">X Remove</a>
+                    <input type="text" name="award_name[]" value="<?php echo esc_attr($aw['name']); ?>" placeholder="Award Name" style="margin-bottom:5px; width:100%;"><br>
+                    <input type="text" name="award_org[]" value="<?php echo esc_attr($aw['org']); ?>" placeholder="Awarding Organization" style="width:100%;">
+                </div>
+                <?php endforeach; ?>
+            </div>
+            <button type="button" class="button" id="add-award">+ Add Award</button>
         </div>
-    </div>
 
-    <div class="nv-team-row">
-        <div class="nv-team-col">
-            <label style="display:block; margin-bottom:10px;">Image Gallery (Click box to manage)</label>
-            <input type="hidden" name="image_gallery" id="image_gallery" value="<?php echo esc_attr($image_gallery); ?>">
+        <script>
+        jQuery(document).ready(function($){
+            // Tabs
+            $('.entity-tab').click(function(){
+                $('.entity-tab').removeClass('active');
+                $('.entity-panel').removeClass('active');
+                $(this).addClass('active');
+                $('#' + $(this).data('target')).addClass('active');
+            });
             
-            <div class="nv-gallery-trigger" data-target="#image_gallery" style="cursor:pointer; min-height:100px; border:2px dashed #cbd5e1; background:#f8fafc; border-radius:8px; padding:15px; display:flex; flex-wrap:wrap; align-items:center; gap:10px;">
-                <?php 
-                if ($image_gallery) {
-                    $urls = explode(',', $image_gallery);
-                    foreach($urls as $u) {
-                        echo '<img src="'.esc_url($u).'" style="max-width:80px; height:80px; object-fit:cover; border-radius:4px; box-shadow:0 1px 3px rgba(0,0,0,0.1);">';
-                    }
-                } else {
-                    echo '<div style="width:100%; text-align:center; color:#94a3b8;"><svg style="width:30px; height:30px; margin:0 auto; display:block; margin-bottom:5px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>Click to add gallery images</div>';
+            // Media
+            var mediaUploader;
+            $(".nv-media-btn").click(function(e) {
+                e.preventDefault();
+                var target = $(this).data("target");
+                if (mediaUploader) { mediaUploader.open(); return; }
+                mediaUploader = wp.media({ title: "Choose Image", multiple: false });
+                mediaUploader.on("select", function() {
+                    var attachment = mediaUploader.state().get("selection").first().toJSON();
+                    $(target).val(attachment.url);
+                });
+                mediaUploader.open();
+            });
+
+            // Repeaters
+            $(document).on('click', '.remove-row', function(e){
+                e.preventDefault();
+                $(this).closest('.repeater-row').remove();
+                calcScore();
+            });
+
+            $('#add-sameas').click(function(){
+                $('#sameas-container').append('<div class="repeater-row"><a href="#" class="remove-row">X Remove</a><div style="display:flex; gap:10px;"><select name="same_as_platform[]"><option value="LinkedIn">LinkedIn</option><option value="Twitter/X">Twitter/X</option><option value="Wikipedia">Wikipedia</option><option value="Personal Website">Personal Website</option></select><input type="url" name="same_as_url[]" placeholder="https://" style="flex:1;"></div></div>');
+            });
+
+            $('#add-education').click(function(){
+                $('#education-container').append('<div class="repeater-row"><a href="#" class="remove-row">X Remove</a><input type="text" name="edu_institution[]" placeholder="Institution Name" style="margin-bottom:5px; width:100%;"><br><input type="text" name="edu_degree[]" placeholder="Degree" style="width:100%;"></div>');
+            });
+
+            $('#add-award').click(function(){
+                $('#awards-container').append('<div class="repeater-row"><a href="#" class="remove-row">X Remove</a><input type="text" name="award_name[]" placeholder="Award Name" style="margin-bottom:5px; width:100%;"><br><input type="text" name="award_org[]" placeholder="Awarding Organization" style="width:100%;"></div>');
+            });
+
+            // Score Logic
+            function calcScore() {
+                var score = 0;
+                var max = 7;
+                var b = "";
+                
+                if($('input[name="first_name"]').val()) { score++; b+="<li>✅ Identity</li>"; } else { b+="<li>❌ Identity</li>"; }
+                if($('#profile_picture').val()) { score++; b+="<li>✅ Picture</li>"; } else { b+="<li>❌ Picture</li>"; }
+                if($('textarea[name="short_bio"]').val()) { score++; b+="<li>✅ Bio</li>"; } else { b+="<li>❌ Bio</li>"; }
+                if($('select[name="designation"]').val()) { score++; b+="<li>✅ Role</li>"; } else { b+="<li>❌ Role</li>"; }
+                if($('input[name="expertise"]').val()) { score++; b+="<li>✅ Expertise</li>"; } else { b+="<li>❌ Expertise</li>"; }
+                if($('#sameas-container .repeater-row').length > 0) { score++; b+="<li>✅ sameAs Links</li>"; } else { b+="<li>❌ sameAs Links</li>"; }
+                if($('#education-container .repeater-row').length > 0) { score++; b+="<li>✅ Education</li>"; } else { b+="<li>❌ Education</li>"; }
+
+                var pct = Math.round((score/max)*100);
+                $('#score-number').text(pct + '%');
+                $('#score-breakdown').html(b);
+            }
+            $('input, select, textarea').on('change keyup', calcScore);
+            calcScore();
+        });
+        </script>
+        <?php
+    }
+
+    public function save_meta_boxes($post_id) {
+        if (!isset($_POST['neptech_entity_nonce']) || !wp_verify_nonce($_POST['neptech_entity_nonce'], 'neptech_entity_save')) return;
+        if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) return;
+        
+        $fields = ['first_name', 'last_name', 'profile_picture', 'short_bio', 'full_bio', 'designation', 'expertise', 'organization'];
+        foreach($fields as $f) {
+            if(isset($_POST[$f])) update_post_meta($post_id, '_entity_'.$f, wp_kses_post($_POST[$f]));
+        }
+
+        // Save Repeaters as JSON
+        $same_as = [];
+        if(isset($_POST['same_as_platform']) && is_array($_POST['same_as_platform'])) {
+            foreach($_POST['same_as_platform'] as $i => $plat) {
+                if(!empty($_POST['same_as_url'][$i])) {
+                    $same_as[] = ['platform' => sanitize_text_field($plat), 'url' => esc_url_raw($_POST['same_as_url'][$i])];
                 }
-                ?>
-            </div>
-            <a href="#" class="nv-remove-gallery-btn" data-target="#image_gallery" style="display:inline-block; margin-top:10px; color:#ef4444; text-decoration:none; font-size:12px;">Clear Gallery</a>
-        </div>
-    </div>
-    <?php
+            }
+        }
+        update_post_meta($post_id, '_entity_same_as', wp_slash(json_encode($same_as)));
+
+        $education = [];
+        if(isset($_POST['edu_institution']) && is_array($_POST['edu_institution'])) {
+            foreach($_POST['edu_institution'] as $i => $inst) {
+                if(!empty($inst)) {
+                    $education[] = ['institution' => sanitize_text_field($inst), 'degree' => sanitize_text_field($_POST['edu_degree'][$i])];
+                }
+            }
+        }
+        update_post_meta($post_id, '_entity_education', wp_slash(json_encode($education)));
+
+        $awards = [];
+        if(isset($_POST['award_name']) && is_array($_POST['award_name'])) {
+            foreach($_POST['award_name'] as $i => $aw) {
+                if(!empty($aw)) {
+                    $awards[] = ['name' => sanitize_text_field($aw), 'org' => sanitize_text_field($_POST['award_org'][$i])];
+                }
+            }
+        }
+        update_post_meta($post_id, '_entity_awards', wp_slash(json_encode($awards)));
+        
+        // Ensure Canonical ID is set based on slug (Immutable preferably, but we tie it to slug for now)
+        $post = get_post($post_id);
+        $canonical_id = "https://neptechbrief.com/team/" . $post->post_name . "/#person";
+        update_post_meta($post_id, '_entity_canonical_id', $canonical_id);
+    }
+
+    public function register_rest_routes() {
+        register_rest_route('neptech/v1', '/team', [
+            'methods' => 'GET',
+            'callback' => [$this, 'get_team_members'],
+            'permission_callback' => '__return_true'
+        ]);
+        
+        // Single entity route
+        register_rest_route('neptech/v1', '/team/(?P<slug>[a-zA-Z0-9-]+)', [
+            'methods' => 'GET',
+            'callback' => [$this, 'get_single_team_member'],
+            'permission_callback' => '__return_true'
+        ]);
+    }
+
+    public function get_team_members($request) {
+        $args = ['post_type' => 'neptech_team_member', 'posts_per_page' => -1, 'post_status' => 'publish'];
+        $posts = get_posts($args);
+        $data = [];
+        foreach($posts as $p) {
+            $data[] = $this->format_entity($p);
+        }
+        return rest_ensure_response($data);
+    }
+    
+    public function get_single_team_member($request) {
+        $slug = $request->get_param('slug');
+        $args = ['post_type' => 'neptech_team_member', 'name' => $slug, 'posts_per_page' => 1, 'post_status' => 'publish'];
+        $posts = get_posts($args);
+        if(empty($posts)) return new WP_Error('not_found', 'Entity not found', ['status' => 404]);
+        
+        return rest_ensure_response($this->format_entity($posts[0]));
+    }
+    
+    private function format_entity($p) {
+        $m = get_post_meta($p->ID);
+        $get = function($k) use ($m) { return isset($m[$k][0]) ? $m[$k][0] : ''; };
+        
+        return [
+            'id' => $p->ID,
+            'slug' => $p->post_name,
+            'canonical_id' => $get('_entity_canonical_id') ?: "https://neptechbrief.com/team/" . $p->post_name . "/#person",
+            'first_name' => $get('_entity_first_name'),
+            'last_name' => $get('_entity_last_name'),
+            'designation' => $get('_entity_designation'),
+            'expertise' => $get('_entity_expertise'),
+            'organization' => $get('_entity_organization') ?: 'NepTechBrief',
+            'profile_picture' => $get('_entity_profile_picture'),
+            'short_bio' => $get('_entity_short_bio'),
+            'full_bio' => $get('_entity_full_bio'),
+            'same_as' => json_decode($get('_entity_same_as'), true) ?: [],
+            'education' => json_decode($get('_entity_education'), true) ?: [],
+            'awards' => json_decode($get('_entity_awards'), true) ?: [],
+            
+            // Legacy fallback for Next.js temporarily to prevent crash during migration
+            'profile_details' => [
+                'first_name' => $get('_entity_first_name'),
+                'last_name' => $get('_entity_last_name'),
+                'designation' => $get('_entity_designation'),
+                'profile_picture' => $get('_entity_profile_picture'),
+                'short_bio' => $get('_entity_short_bio')
+            ]
+        ];
+    }
 }
 
-// 4. Save Meta
-add_action('save_post', function($post_id) {
-    if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) return;
-    $fields = ['first_name', 'last_name', 'designation', 'email', 'facebook', 'twitter', 'linkedin', 'short_bio', 'detailed_bio', 'profile_picture', 'image_gallery'];
-    foreach ($fields as $f) {
-        if (isset($_POST[$f])) {
-            $val = $_POST[$f];
-            if (in_array($f, ['facebook', 'twitter', 'linkedin', 'profile_picture'])) $val = esc_url_raw($val);
-            elseif ($f === 'detailed_bio') $val = wp_kses_post($val);
-            else $val = sanitize_text_field($val);
-            update_post_meta($post_id, $f, $val);
-        }
-    }
-});
-
-// 5. Expose Meta to REST API
-add_action('rest_api_init', function() {
-    register_rest_field('team_member', 'profile_details', [
-        'get_callback' => function($post_arr) {
-            $post_id = $post_arr['id'];
-            $meta = get_post_meta($post_id);
-            return [
-                'first_name' => $meta['first_name'][0] ?? '',
-                'last_name' => $meta['last_name'][0] ?? '',
-                'designation' => $meta['designation'][0] ?? '',
-                'email' => $meta['email'][0] ?? '',
-                'facebook' => $meta['facebook'][0] ?? '',
-                'twitter' => $meta['twitter'][0] ?? '',
-                'linkedin' => $meta['linkedin'][0] ?? '',
-                'short_bio' => $meta['short_bio'][0] ?? '',
-                'detailed_bio' => $meta['detailed_bio'][0] ?? '',
-                'profile_picture' => $meta['profile_picture'][0] ?? '',
-                'image_gallery' => $meta['image_gallery'][0] ?? ''
-            ];
-        }
-    ]);
-});
-
-
-
+new NepTech_Entity_Manager();

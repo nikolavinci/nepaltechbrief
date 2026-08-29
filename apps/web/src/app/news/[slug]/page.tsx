@@ -179,7 +179,7 @@ export default async function NewsArticlePage({ params }: { params: Promise<{ sl
           {article.title_np || article.title_en}
         </h1>
 
-        <Link href={`/author/${authorSlug}`} className="flex items-center gap-4 pt-4 border-t border-dashed hover:opacity-80 transition-opacity group">
+        <Link href={`/team/${authorSlug}`} className="flex items-center gap-4 pt-4 border-t border-dashed hover:opacity-80 transition-opacity group">
           <div className="w-12 h-12 rounded-full overflow-hidden flex-shrink-0 border-2 border-transparent group-hover:border-primary transition-colors relative">
             <Image src={authorImage} alt={authorName} fill sizes="48px" className="object-cover" />
           </div>
@@ -216,12 +216,12 @@ export default async function NewsArticlePage({ params }: { params: Promise<{ sl
       </article>
         {/* Author Bio Box */}
         <div className="my-12 p-6 md:p-8 bg-muted/30 border border-border/50 rounded-2xl flex flex-col md:flex-row gap-6 items-center md:items-start transition-colors hover:border-primary/30 group/bio">
-          <Link href={`/author/${authorSlug}`} className="w-24 h-24 rounded-full overflow-hidden border-2 border-transparent flex-shrink-0 group-hover/bio:border-primary/50 transition-colors bg-card p-2 shadow-sm relative">
+          <Link href={`/team/${authorSlug}`} className="w-24 h-24 rounded-full overflow-hidden border-2 border-transparent flex-shrink-0 group-hover/bio:border-primary/50 transition-colors bg-card p-2 shadow-sm relative">
             <Image src={authorImage} alt={authorName} fill sizes="96px" className="object-cover drop-shadow-sm" />
           </Link>
           <div className="flex-1 text-center md:text-left">
             <div className="flex flex-col md:flex-row items-center gap-3 mb-3">
-              <Link href={`/author/${authorSlug}`} className="text-xl font-bold font-heading hover:text-primary transition-colors">
+              <Link href={`/team/${authorSlug}`} className="text-xl font-bold font-heading hover:text-primary transition-colors">
                 {authorName}
               </Link>
             </div>
@@ -330,5 +330,6 @@ export default async function NewsArticlePage({ params }: { params: Promise<{ sl
     </div>
   );
 }
+
 
 
