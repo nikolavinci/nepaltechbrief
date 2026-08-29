@@ -2,7 +2,7 @@
 /**
  * Plugin Name: NikolaVinci Teams Manager
  * Description: Manages the editorial team members with a detailed profile UI and structured data support.
- * Version: 2.1.0
+ * Version: 2.2.0
  * Author: NikolaVinci
  */
 
@@ -62,11 +62,18 @@ function team_member_meta_html($post) {
     </style>
     
     <div class="nv-team-row">
-        <div class="nv-team-col">
-            <label>First Name</label>
-            <input type="text" name="first_name" value="<?php echo esc_attr($first_name); ?>">
+        <div class="nv-team-col nv-media-preview" style="flex: 0 0 150px;">
+            <label>Profile Picture</label>
+            <input type="hidden" name="profile_picture" id="profile_picture" value="<?php echo esc_attr($profile_picture); ?>">
+            <button type="button" class="button nv-upload-btn" data-target="#profile_picture">Choose</button>
+            <button type="button" class="button nv-remove-btn" data-target="#profile_picture">Remove</button>
+            <div class="preview-area" style="margin-top:10px;">
+                <?php if ($profile_picture) echo '<img src="'.esc_url($profile_picture).'">'; ?>
+            </div>
         </div>
         <div class="nv-team-col">
+            <label>First Name</label>
+            <input type="text" name="first_name" value="<?php echo esc_attr($first_name); ?>" style="margin-bottom:15px;">
             <label>Last Name</label>
             <input type="text" name="last_name" value="<?php echo esc_attr($last_name); ?>">
         </div>
@@ -75,7 +82,10 @@ function team_member_meta_html($post) {
     <div class="nv-team-row">
         <div class="nv-team-col">
             <label>Designation / Role</label>
-            <input type="text" name="designation" value="<?php echo esc_attr($designation); ?>">
+            <select name="designation" style="width:100%;">
+                <option value="">-- Select Role --</option>
+                <option value="Founder" <?php selected($designation, "Founder"); ?>>Founder</option><option value="CEO" <?php selected($designation, "CEO"); ?>>CEO</option><option value="Founder and CEO" <?php selected($designation, "Founder and CEO"); ?>>Founder and CEO</option><option value="CFO" <?php selected($designation, "CFO"); ?>>CFO</option><option value="CMO" <?php selected($designation, "CMO"); ?>>CMO</option><option value="Director" <?php selected($designation, "Director"); ?>>Director</option><option value="Journalist" <?php selected($designation, "Journalist"); ?>>Journalist</option><option value="Photojournalist" <?php selected($designation, "Photojournalist"); ?>>Photojournalist</option><option value="Editor" <?php selected($designation, "Editor"); ?>>Editor</option><option value="Editor in Chief" <?php selected($designation, "Editor in Chief"); ?>>Editor in Chief</option><option value="Social Media Manager" <?php selected($designation, "Social Media Manager"); ?>>Social Media Manager</option><option value="Author" <?php selected($designation, "Author"); ?>>Author</option><option value="Writer" <?php selected($designation, "Writer"); ?>>Writer</option><option value="Videographer" <?php selected($designation, "Videographer"); ?>>Videographer</option>
+            </select>
         </div>
         <div class="nv-team-col">
             <label>Email Address</label>
@@ -110,19 +120,21 @@ function team_member_meta_html($post) {
     </div>
 
     <div class="nv-team-row">
-        <div class="nv-team-col nv-media-preview">
-            <label>Profile Picture</label>
-            <input type="hidden" name="profile_picture" id="profile_picture" value="<?php echo esc_attr($profile_picture); ?>">
-            <button type="button" class="button nv-upload-btn" data-target="#profile_picture">Choose Image</button>
-            <button type="button" class="button nv-remove-btn" data-target="#profile_picture">Remove</button>
-            <div class="preview-area">
-                <?php if ($profile_picture) echo '<img src="'.esc_url($profile_picture).'">'; ?>
-            </div>
-        </div>
         <div class="nv-team-col">
-            <label>Image Gallery (Comma separated URLs)</label>
-            <textarea name="image_gallery" rows="4"><?php echo esc_textarea($image_gallery); ?></textarea>
-            <p class="description">Paste full image URLs here, separated by commas, for their personal gallery.</p>
+            <label>Image Gallery</label>
+            <input type="hidden" name="image_gallery" id="image_gallery" value="<?php echo esc_attr($image_gallery); ?>">
+            <button type="button" class="button nv-gallery-btn" data-target="#image_gallery">Manage Gallery Images</button>
+            <div class="gallery-preview-area" style="margin-top:10px; display:flex; flex-wrap:wrap;">
+                <?php 
+                if ($image_gallery) {
+                    $urls = explode(',', $image_gallery);
+                    foreach($urls as $u) {
+                        echo '<img src="'.esc_url($u).'" style="max-width:80px; margin-right:5px; margin-bottom:5px; border-radius:4px;">';
+                    }
+                }
+                ?>
+            </div>
+            <p class="description">Select multiple images to form a gallery.</p>
         </div>
     </div>
     <?php
@@ -165,4 +177,5 @@ add_action('rest_api_init', function() {
         }
     ]);
 });
+
 

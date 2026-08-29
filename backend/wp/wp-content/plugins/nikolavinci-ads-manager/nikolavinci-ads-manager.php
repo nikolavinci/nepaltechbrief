@@ -3,7 +3,7 @@
  * Plugin Name: Content Automaton Ads Manager
  * Plugin URI: https://nikolavinci.com
  * Description: Advanced ad management. Third-party support (AdSense/Ezoic), UI analytics, position toggles, and responsive ad slots.
- * Version: 2.2.0
+ * Version: 2.4.0
  * Author: nikolavinci
  * Author URI: https://nikolavinci.com
  */
@@ -61,6 +61,7 @@ add_action( 'admin_enqueue_scripts', function($hook) {
                 });
                 
                 // Toggle Fields based on Ad Type
+                $(".type-code-group").hide();
                 $("input[name=\'ad_type\']").change(function(){
                     if($(this).val() === "image") {
                         $(".type-image-group").show();
@@ -77,61 +78,85 @@ add_action( 'admin_enqueue_scripts', function($hook) {
 
 // 3. Settings & Analytics Page
 add_action('admin_menu', function() {
-    add_submenu_page(
-        'edit.php?post_type=neptech_ad',
-        'Analytics & Settings',
-        'Analytics & Settings',
-        'manage_options',
-        'ads-analytics',
-        'neptech_ads_analytics_page'
-    );
+    add_submenu_page('edit.php?post_type=neptech_ad', 'Dashboard Overview', 'Overview', 'manage_options', 'ads-analytics', 'neptech_ads_dashboard_page');
+    add_submenu_page('edit.php?post_type=neptech_ad', 'Global Settings & Guide', 'Settings & Guide', 'manage_options', 'ads-settings', 'neptech_ads_settings_page');
 });
 
-function neptech_ads_analytics_page() {
-    if ( isset($_POST['neptech_save_settings']) ) {
-        $settings = [
-            'top' => isset($_POST['pos_top']),
-            'bottom' => isset($_POST['pos_bottom']),
-            'between_sections' => isset($_POST['pos_between_sections']),
-            'sidebar' => isset($_POST['pos_sidebar']),
-            'article_mid' => isset($_POST['pos_article_mid']),
-        ];
-        update_option('neptech_ad_settings', $settings);
-        echo '<div class="updated"><p>Settings saved.</p></div>';
-    }
-    
-    $settings = get_option('neptech_ad_settings', ['top'=>true, 'bottom'=>true, 'between_sections'=>true, 'sidebar'=>true, 'article_mid'=>true]);
-    
-    // Calculate totals
-    $ads = get_posts(['post_type' => 'neptech_ad', 'posts_per_page' => -1]);
+
+function neptech_ads_dashboard_page() {
+    $ads = get_posts(['post_type' => 'neptech_ad', 'numberposts' => -1]);
     $total_views = 0; $total_clicks = 0;
     foreach($ads as $ad) {
-        $total_views += (int)get_post_meta($ad->ID, '_ad_views', true);
-        $total_clicks += (int)get_post_meta($ad->ID, '_ad_clicks', true);
+        $total_views += (int) get_post_meta($ad->ID, '_ad_views', true);
+        $total_clicks += (int) get_post_meta($ad->ID, '_ad_clicks', true);
     }
-    
     ?>
-    <div class="wrap" style="background:#fff; padding:20px; border-radius:8px; box-shadow:0 1px 3px rgba(0,0,0,0.1); margin-top:20px;">
-        <h1 style="border-bottom:1px solid #eee; padding-bottom:10px; margin-bottom:20px;">Ad Analytics & Settings</h1>
+    <div class="wrap">
+        <h1 style="color:#0f172a; margin-bottom:20px;">NepTechBrief Ads Overview</h1>
         
-        <div style="display:flex; gap:20px; margin-bottom:30px;">
+        <div style="display:flex; gap:20px; max-width:800px; margin-bottom:30px;">
             <div style="flex:1; background:#f8fafc; padding:20px; border-radius:8px; border:1px solid #e2e8f0; text-align:center;">
-                <h3 style="margin:0 0 10px 0; color:#64748b;">Total Impressions</h3>
+                <h3 style="margin:0 0 10px 0; color:#64748b;">Total Network Impressions</h3>
                 <div style="font-size:32px; font-weight:bold; color:#0f172a;"><?php echo number_format($total_views); ?></div>
             </div>
             <div style="flex:1; background:#f8fafc; padding:20px; border-radius:8px; border:1px solid #e2e8f0; text-align:center;">
-                <h3 style="margin:0 0 10px 0; color:#64748b;">Total Clicks</h3>
+                <h3 style="margin:0 0 10px 0; color:#64748b;">Total Network Clicks</h3>
                 <div style="font-size:32px; font-weight:bold; color:#2563eb;"><?php echo number_format($total_clicks); ?></div>
             </div>
             <div style="flex:1; background:#f8fafc; padding:20px; border-radius:8px; border:1px solid #e2e8f0; text-align:center;">
-                <h3 style="margin:0 0 10px 0; color:#64748b;">Avg. CTR</h3>
+                <h3 style="margin:0 0 10px 0; color:#64748b;">Network CTR</h3>
                 <div style="font-size:32px; font-weight:bold; color:#10b981;">
                     <?php echo $total_views > 0 ? round(($total_clicks / $total_views) * 100, 2) : 0; ?>%
                 </div>
             </div>
         </div>
 
-        <h2 style="margin-top:30px; border-bottom:1px solid #eee; padding-bottom:10px;">Global Position Toggles</h2>
+        <h2 style="margin-top:30px; border-bottom:1px solid #eee; padding-bottom:10px;">Active Ad Campaigns</h2>
+        <table class="wp-list-table widefat fixed striped">
+            <thead>
+                <tr>
+                    <th>Ad Name</th>
+                    <th>Positions</th>
+                    <th>Impressions</th>
+                    <th>Clicks</th>
+                    <th>CTR</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php if(!$ads) echo '<tr><td colspan="5">No ads found.</td></tr>'; ?>
+                <?php foreach($ads as $ad): 
+                    $v = (int) get_post_meta($ad->ID, '_ad_views', true);
+                    $c = (int) get_post_meta($ad->ID, '_ad_clicks', true);
+                    $pos = get_post_meta($ad->ID, '_ad_position', true);
+                    if(!is_array($pos)) $pos = [$pos];
+                ?>
+                <tr>
+                    <td><strong><a href="<?php echo get_edit_post_link($ad->ID); ?>"><?php echo esc_html($ad->post_title); ?></a></strong></td>
+                    <td><?php echo esc_html(implode(', ', array_filter($pos))); ?></td>
+                    <td><?php echo number_format($v); ?></td>
+                    <td><?php echo number_format($c); ?></td>
+                    <td><?php echo $v > 0 ? round(($c/$v)*100,2) : 0; ?>%</td>
+                </tr>
+                <?php endforeach; ?>
+            </tbody>
+        </table>
+    </div>
+    <?php
+}
+
+function neptech_ads_settings_page() {
+    if ( isset($_POST['neptech_save_settings']) ) {
+        $settings = [];
+        foreach(['top','bottom','between_sections','sidebar','ad_below_title_1','ad_below_title_2','ad_below_featured_1','ad_below_featured_2','ad_mid_1','ad_mid_2','ad_bottom_1','ad_bottom_2'] as $p) {
+            $settings[$p] = isset($_POST['pos_'.$p]);
+        }
+        update_option('neptech_ad_settings', $settings);
+        echo '<div class="notice notice-success is-dismissible"><p>Settings saved!</p></div>';
+    }
+    $settings = get_option('neptech_ad_settings', []);
+    ?>
+    <div class="wrap">
+        <h1 style="color:#0f172a; margin-bottom:20px;">Global Position Toggles & Guidelines</h1>
         <p>Turn off specific ad zones across the entire website.</p>
         <form method="POST">
             <table class="form-table">
@@ -152,6 +177,60 @@ function neptech_ads_analytics_page() {
             <input type="hidden" name="neptech_save_settings" value="1" />
             <button type="submit" class="button button-primary" style="margin-top:15px;">Save Settings</button>
         </form>
+
+        <h2 style="margin-top:40px;">Visual Guide & Dimensions</h2>
+        <div style="background: #fff; padding: 20px; border: 1px solid #ccc; margin-top: 15px; border-radius: 6px;">
+            <table class="wp-list-table widefat fixed striped">
+                <thead>
+                    <tr>
+                        <th style="font-size:14px;">Ad Slot Name</th>
+                        <th style="font-size:14px;">Desktop Dimensions</th>
+                        <th style="font-size:14px;">Mobile / Tablet Dimensions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td><strong>Top Banner (Header)</strong></td><td>728x90 or 730x200 px</td><td>320x100 px</td></tr>
+                    <tr><td><strong>Between Sections (Homepage)</strong></td><td>760x115 px</td><td>320x100 px</td></tr>
+                    <tr><td><strong>Sidebar Native</strong></td><td>300x250 or 300x600 px</td><td>300x250 px</td></tr>
+                    <tr><td><strong>Ad 1 & 2 (Below Title)</strong></td><td>730x200 px</td><td>320x100 px</td></tr>
+                    <tr><td><strong>Ad 3 & 4 (Below Featured Image)</strong></td><td>730x200 px</td><td>320x100 px</td></tr>
+                    <tr><td><strong>Ad 5 & 6 (Square Mid-Article)</strong></td><td>250x250 or 300x250 px</td><td>250x250 px (Stacked)</td></tr>
+                    <tr><td><strong>Ad 7 & 8 (Below Author Box)</strong></td><td>730x200 px</td><td>320x100 px</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div style="display:flex; gap:30px; margin-top:30px;">
+            <div style="flex:1; background:#fff; padding:20px; border:1px solid #ccc; max-width:400px; text-align:center; border-radius:8px;">
+                <h3>Homepage Layout</h3>
+                <div style="border:2px dashed #0369a1; background:#e0f2fe; padding:10px; margin:10px 0; font-weight:bold;">Top Banner</div>
+                <div style="background:#f1f5f9; padding:20px; margin:10px 0; height:80px;">Latest News Grid</div>
+                <div style="border:2px dashed #0369a1; background:#e0f2fe; padding:10px; margin:10px 0; font-weight:bold;">Between Sections</div>
+                <div style="background:#f1f5f9; padding:20px; margin:10px 0; height:80px;">Category Sections</div>
+            </div>
+
+            <div style="flex:1; background:#fff; padding:20px; border:1px solid #ccc; max-width:400px; text-align:center; border-radius:8px;">
+                <h3>Article Layout</h3>
+                <div style="background:#f1f5f9; padding:10px; margin:10px 0; font-size:20px; font-weight:bold;">Article Title</div>
+                <div style="border:2px dashed #15803d; background:#dcfce7; padding:10px; margin:5px 0;">Ad 1 (Below Title)</div>
+                <div style="border:2px dashed #15803d; background:#dcfce7; padding:10px; margin:5px 0;">Ad 2 (Below Ad 1)</div>
+                <div style="background:#e2e8f0; padding:20px; margin:10px 0; height:100px;">Featured Image</div>
+                <div style="border:2px dashed #15803d; background:#dcfce7; padding:10px; margin:5px 0;">Ad 3 (Below Featured Image)</div>
+                <div style="border:2px dashed #15803d; background:#dcfce7; padding:10px; margin:5px 0;">Ad 4 (Below Ad 3)</div>
+                
+                <div style="background:#f8fafc; padding:20px; margin:10px 0; text-align:left; font-size:12px; color:#666;">
+                    [Article Text]...<br>
+                    <div style="display:flex; gap:10px; margin:10px 0;">
+                        <div style="flex:1; border:2px dashed #15803d; background:#dcfce7; padding:20px; text-align:center;">Ad 5 (Mid)</div>
+                        <div style="flex:1; border:2px dashed #15803d; background:#dcfce7; padding:20px; text-align:center;">Ad 6 (Mid)</div>
+                    </div>
+                    [Article Text]...
+                </div>
+
+                <div style="border:2px dashed #15803d; background:#dcfce7; padding:10px; margin:5px 0;">Ad 7 (End of Article)</div>
+                <div style="border:2px dashed #15803d; background:#dcfce7; padding:10px; margin:5px 0;">Ad 8 (Below Ad 7)</div>
+            </div>
+        </div>
     </div>
     <?php
 }
@@ -384,19 +463,19 @@ function neptech_ad_guidelines_html($post) {
         
         <h4>1. Top & Bottom Leaderboards (<code>top</code>, <code>bottom</code>, <code>between_sections</code>)</h4>
         <ul>
-            <li><strong>Recommended Size:</strong> <code>1200px</code> width × <code>130px</code> height.</li>
+            <li><strong>Recommended Size:</strong> <code>1200px</code> width Ã— <code>130px</code> height.</li>
             <li><strong>Constraint:</strong> Strictly max-height <code>130px</code>. Keep text centered for mobile cropping.</li>
         </ul>
 
         <h4>2. Sidebar Ads (<code>sidebar</code>)</h4>
         <ul>
-            <li><strong>Recommended Size:</strong> <code>300px</code> width × <code>250px</code> height OR <code>300px</code> width × <code>600px</code> height.</li>
+            <li><strong>Recommended Size:</strong> <code>300px</code> width Ã— <code>250px</code> height OR <code>300px</code> width Ã— <code>600px</code> height.</li>
             <li><strong>Constraint:</strong> Only appears on single article pages (right column).</li>
         </ul>
 
         <h4>3. Middle of Article (<code>article_mid</code>)</h4>
         <ul>
-            <li><strong>Recommended Size:</strong> <code>800px</code> width × <code>130px</code> height.</li>
+            <li><strong>Recommended Size:</strong> <code>800px</code> width Ã— <code>130px</code> height.</li>
             <li><strong>Constraint:</strong> Max height <code>130px</code> to avoid disrupting the reader's flow.</li>
         </ul>
 
@@ -411,4 +490,6 @@ function neptech_ad_guidelines_html($post) {
     </div>
     <?php
 }
+
+
 
