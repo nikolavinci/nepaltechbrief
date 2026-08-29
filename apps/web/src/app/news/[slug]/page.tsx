@@ -209,7 +209,7 @@ export default async function NewsArticlePage({ params }: { params: Promise<{ sl
       </figure>
 
       {/* Article Body */}
-      <article className="prose prose-lg dark:prose-invert prose-headings:font-heading prose-a:text-primary max-w-none leading-relaxed tracking-wide text-foreground/90">
+      <article className="prose dark:prose-invert prose-headings:font-heading prose-a:text-primary max-w-none tracking-wide text-foreground/90 text-justify text-[18px] sm:text-[19px] md:text-[20px] leading-[1.9] prose-p:text-justify prose-p:text-[18px] sm:prose-p:text-[19px] md:prose-p:text-[20px] prose-p:leading-[1.9]">
         <div dangerouslySetInnerHTML={{ __html: firstHalf }} />
         <DynamicAd position="article_mid" />
         <div dangerouslySetInnerHTML={{ __html: secondHalf }} />
@@ -330,4 +330,5 @@ export default async function NewsArticlePage({ params }: { params: Promise<{ sl
     </div>
   );
 }
+
 
