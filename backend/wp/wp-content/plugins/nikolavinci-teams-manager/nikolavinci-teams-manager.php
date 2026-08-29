@@ -2,7 +2,7 @@
 /**
  * Plugin Name: NikolaVinci Teams Manager
  * Description: Manages the editorial team members with a detailed profile UI and structured data support.
- * Version: 2.2.0
+ * Version: 2.4.0
  * Author: NikolaVinci
  */
 
@@ -62,14 +62,17 @@ function team_member_meta_html($post) {
     </style>
     
     <div class="nv-team-row">
-        <div class="nv-team-col nv-media-preview" style="flex: 0 0 150px;">
-            <label>Profile Picture</label>
+        <div class="nv-team-col nv-media-preview" style="flex: 0 0 150px; text-align:center;">
+            <label style="display:block; margin-bottom:10px;">Profile Picture</label>
             <input type="hidden" name="profile_picture" id="profile_picture" value="<?php echo esc_attr($profile_picture); ?>">
-            <button type="button" class="button nv-upload-btn" data-target="#profile_picture">Choose</button>
-            <button type="button" class="button nv-remove-btn" data-target="#profile_picture">Remove</button>
-            <div class="preview-area" style="margin-top:10px;">
-                <?php if ($profile_picture) echo '<img src="'.esc_url($profile_picture).'">'; ?>
+            <div class="nv-upload-trigger" data-target="#profile_picture" style="cursor:pointer; width:120px; height:120px; border-radius:50%; border:2px dashed #cbd5e1; background:#f8fafc; margin:0 auto; overflow:hidden; position:relative; display:flex; align-items:center; justify-content:center;">
+                <?php if ($profile_picture): ?>
+                    <img src="<?php echo esc_url($profile_picture); ?>" style="width:100%; height:100%; object-fit:cover;">
+                <?php else: ?>
+                    <svg style="width:40px; height:40px; color:#94a3b8;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+                <?php endif; ?>
             </div>
+            <a href="#" class="nv-remove-btn" data-target="#profile_picture" style="display:inline-block; margin-top:10px; color:#ef4444; text-decoration:none; font-size:12px;">Remove Image</a>
         </div>
         <div class="nv-team-col">
             <label>First Name</label>
@@ -121,20 +124,22 @@ function team_member_meta_html($post) {
 
     <div class="nv-team-row">
         <div class="nv-team-col">
-            <label>Image Gallery</label>
+            <label style="display:block; margin-bottom:10px;">Image Gallery (Click box to manage)</label>
             <input type="hidden" name="image_gallery" id="image_gallery" value="<?php echo esc_attr($image_gallery); ?>">
-            <button type="button" class="button nv-gallery-btn" data-target="#image_gallery">Manage Gallery Images</button>
-            <div class="gallery-preview-area" style="margin-top:10px; display:flex; flex-wrap:wrap;">
+            
+            <div class="nv-gallery-trigger" data-target="#image_gallery" style="cursor:pointer; min-height:100px; border:2px dashed #cbd5e1; background:#f8fafc; border-radius:8px; padding:15px; display:flex; flex-wrap:wrap; align-items:center; gap:10px;">
                 <?php 
                 if ($image_gallery) {
                     $urls = explode(',', $image_gallery);
                     foreach($urls as $u) {
-                        echo '<img src="'.esc_url($u).'" style="max-width:80px; margin-right:5px; margin-bottom:5px; border-radius:4px;">';
+                        echo '<img src="'.esc_url($u).'" style="max-width:80px; height:80px; object-fit:cover; border-radius:4px; box-shadow:0 1px 3px rgba(0,0,0,0.1);">';
                     }
+                } else {
+                    echo '<div style="width:100%; text-align:center; color:#94a3b8;"><svg style="width:30px; height:30px; margin:0 auto; display:block; margin-bottom:5px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>Click to add gallery images</div>';
                 }
                 ?>
             </div>
-            <p class="description">Select multiple images to form a gallery.</p>
+            <a href="#" class="nv-remove-gallery-btn" data-target="#image_gallery" style="display:inline-block; margin-top:10px; color:#ef4444; text-decoration:none; font-size:12px;">Clear Gallery</a>
         </div>
     </div>
     <?php
@@ -177,5 +182,6 @@ add_action('rest_api_init', function() {
         }
     ]);
 });
+
 
 
