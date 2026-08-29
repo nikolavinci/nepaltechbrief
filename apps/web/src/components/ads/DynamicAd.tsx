@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState, useRef } from "react";
 
@@ -7,12 +7,13 @@ interface AdData {
   type: string;
   title: string;
   image_url: string;
+  image_mobile_url?: string;
   code: string;
   click_url: string;
   disabled?: boolean;
 }
 
-export function DynamicAd({ position }: { position: "top" | "bottom" | "between_sections" | "sidebar" | "article_mid" }) {
+export function DynamicAd({ position }: { position: "top" | "bottom" | "between_sections" | "sidebar" | "article_mid" | "ad_below_title_1" | "ad_below_title_2" | "ad_below_featured_1" | "ad_below_featured_2" | "ad_mid_1" | "ad_mid_2" | "ad_bottom_1" | "ad_bottom_2" }) {
   const [ad, setAd] = useState<AdData | null>(null);
   const [loading, setLoading] = useState(true);
   const codeRef = useRef<HTMLDivElement>(null);
@@ -58,14 +59,22 @@ export function DynamicAd({ position }: { position: "top" | "bottom" | "between_
 
   if (loading) {
     // Preserve space to prevent Cumulative Layout Shift (CLS)
-    const minHeights = {
+    const minHeights: Record<string, string> = {
       top: 'min-h-[130px]',
       bottom: 'min-h-[130px]',
       between_sections: 'min-h-[130px]',
       sidebar: 'min-h-[300px]',
-      article_mid: 'min-h-[130px]'
+      article_mid: 'min-h-[130px]',
+      ad_below_title_1: 'min-h-[130px]',
+      ad_below_title_2: 'min-h-[130px]',
+      ad_below_featured_1: 'min-h-[130px]',
+      ad_below_featured_2: 'min-h-[130px]',
+      ad_mid_1: 'min-h-[250px]',
+      ad_mid_2: 'min-h-[250px]',
+      ad_bottom_1: 'min-h-[130px]',
+      ad_bottom_2: 'min-h-[130px]'
     };
-    return <div className={`w-full bg-muted/20 animate-pulse rounded-2xl ${minHeights[position]} my-4`} />;
+    return <div className={`w-full bg-muted/20 animate-pulse rounded-2xl ${minHeights[position] || 'min-h-[130px]'} my-4`} />;
   }
 
   if (!ad) return null; // Ad position disabled or no ads exist
@@ -85,14 +94,20 @@ export function DynamicAd({ position }: { position: "top" | "bottom" | "between_
       rel="noopener noreferrer" 
       className={`block w-full relative group overflow-hidden rounded-2xl shadow-sm hover:shadow-lg transition-all border border-border/20 ${position === 'sidebar' ? 'my-4' : 'my-8 max-h-[130px]'}`}
     >
-      <img 
-        src={ad.image_url} 
-        alt={ad.title} 
-        className="w-full h-full object-cover rounded-2xl" 
-      />
+      <picture>
+        {ad.image_mobile_url && <source media="(max-width: 768px)" srcSet={ad.image_mobile_url} />}
+        <img 
+          src={ad.image_url} 
+          alt={ad.title} 
+          className="w-full h-full object-cover rounded-2xl" 
+        />
+      </picture>
       <div className="absolute top-2 right-2 px-1.5 py-0.5 bg-black/60 text-[9px] text-white uppercase rounded-sm z-10 backdrop-blur-sm border border-white/20">
         Advertisement
       </div>
     </a>
   );
 }
+
+
+

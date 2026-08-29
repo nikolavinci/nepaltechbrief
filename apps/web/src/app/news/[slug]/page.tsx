@@ -1,4 +1,4 @@
-import { notFound } from 'next/navigation';
+﻿import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import { fetchArticle, fetchArticles } from '@/lib/api';
@@ -189,7 +189,10 @@ export default async function NewsArticlePage({ params }: { params: Promise<{ sl
             </p>
           </div>
         </Link>
-      </header>
+            </header>
+
+      <DynamicAd position="ad_below_title_1" />
+      <DynamicAd position="ad_below_title_2" />
 
       {/* Featured Image */}
       <figure className="mb-12">
@@ -327,3 +330,4 @@ export default async function NewsArticlePage({ params }: { params: Promise<{ sl
     </div>
   );
 }
+

@@ -1,4 +1,4 @@
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://api.neptechbrief.com/wp-json/wp/v2';
+﻿const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://api.neptechbrief.com/wp-json/wp/v2';
 
 export interface Category {
   id: number;
@@ -50,7 +50,7 @@ function mapWPPostToArticle(post: any): Article {
   let authorName = 'Editor';
   let authorAvatar = '';
   let authorSlug = 'editor';
-  let authorDesc = 'प्रविधि र डिजिटल अर्थतन्त्रमा विशेषज्ञता हासिल गरेका एक अनुभवी पत्रकार हुन्।';
+  let authorDesc = 'à¤ªà¥à¤°à¤µà¤¿à¤§à¤¿ à¤° à¤¡à¤¿à¤œà¤¿à¤Ÿà¤² à¤…à¤°à¥à¤¥à¤¤à¤¨à¥à¤¤à¥à¤°à¤®à¤¾ à¤µà¤¿à¤¶à¥‡à¤·à¤œà¥à¤žà¤¤à¤¾ à¤¹à¤¾à¤¸à¤¿à¤² à¤—à¤°à¥‡à¤•à¤¾ à¤à¤• à¤…à¤¨à¥à¤­à¤µà¥€ à¤ªà¤¤à¥à¤°à¤•à¤¾à¤° à¤¹à¥à¤¨à¥à¥¤';
   if (post._embedded && post._embedded.author && post._embedded.author[0]) {
     const authorData = post._embedded.author[0];
     authorName = authorData.name;
@@ -218,7 +218,7 @@ export async function fetchArticlesByAuthor(authorId: number, page: number = 1, 
 
 export async function fetchTeamMembers() {
   try {
-    const res = await fetch("/team_member?per_page=100&orderby=menu_order&order=asc", {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "https://api.neptechbrief.com/wp-json/wp/v2"}/team_member?per_page=100&orderby=menu_order&order=asc`, {
       next: { revalidate: 60 }
     });
     if (!res.ok) return [];
@@ -228,3 +228,5 @@ export async function fetchTeamMembers() {
     return [];
   }
 }
+
+
