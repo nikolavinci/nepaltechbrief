@@ -21,6 +21,9 @@ class CA_Admin {
             update_option('ca_ai_provider', sanitize_text_field($_POST['ca_ai_provider']));
             update_option('ca_openai_key', sanitize_text_field($_POST['ca_openai_key']));
             update_option('ca_gemini_key', sanitize_text_field($_POST['ca_gemini_key']));
+            update_option('ca_groq_key', sanitize_text_field($_POST['ca_groq_key']));
+            update_option('ca_deepseek_key', sanitize_text_field($_POST['ca_deepseek_key']));
+            update_option('ca_qwen_key', sanitize_text_field($_POST['ca_qwen_key']));
             
             update_option('ca_unsplash_key', sanitize_text_field($_POST['ca_unsplash_key']));
             update_option('ca_pexels_key', sanitize_text_field($_POST['ca_pexels_key']));
@@ -129,7 +132,7 @@ class CA_Admin {
         $total_cost = get_option('ca_total_cost', 0);
         
         echo '<h2>API Cost & Usage Dashboard</h2>';
-        echo '<p>Track your AI API expenses automatically. Estimates are based on GPT-4o-mini and Gemini 1.5 Flash standard pricing.</p>';
+        echo '<p>Track your AI API expenses automatically. Estimates are based on standard provider pricing.</p>';
         
         echo '<div style="display:grid; grid-template-columns: repeat(2, 1fr); gap:20px; max-width:600px; margin-top:30px;">';
         $this->stat_card("Total Tokens Consumed", number_format($total_tokens), "#3b82f6");
@@ -296,12 +299,18 @@ class CA_Admin {
         
         echo '</table>';
 
-        echo '<h3 style="border-bottom:1px solid #ccc; padding-bottom:10px; margin-top:30px;">3. Provider API Keys</h3>';
+        echo '<h3 style="border-bottom:1px solid #ccc; padding-bottom:10px; margin-top:30px;">3. AI Text Generation Providers</h3>';
         echo '<table class="form-table">';
         
         $provider = get_option('ca_ai_provider', 'openai');
         echo '<tr><th><label style="font-weight:bold;">Active AI Provider</label></th><td>';
-        echo '<select name="ca_ai_provider" style="width:100%;"><option value="openai" ' . selected($provider, 'openai', false) . '>OpenAI (GPT-4o-mini)</option><option value="gemini" ' . selected($provider, 'gemini', false) . '>Google Gemini (1.5 Flash)</option></select></td></tr>';
+        echo '<select name="ca_ai_provider" style="width:100%;">';
+        echo '<option value="openai" ' . selected($provider, 'openai', false) . '>OpenAI (GPT-4o-mini)</option>';
+        echo '<option value="gemini" ' . selected($provider, 'gemini', false) . '>Google Gemini (1.5 Flash)</option>';
+        echo '<option value="groq" ' . selected($provider, 'groq', false) . '>Groq (Llama-3 70B Fast)</option>';
+        echo '<option value="deepseek" ' . selected($provider, 'deepseek', false) . '>DeepSeek (DeepSeek-Chat)</option>';
+        echo '<option value="qwen" ' . selected($provider, 'qwen', false) . '>Alibaba Qwen (Qwen-Turbo)</option>';
+        echo '</select></td></tr>';
         
         echo '<tr><th><label style="font-weight:bold;">OpenAI API Key</label></th><td>';
         echo '<input type="password" name="ca_openai_key" value="' . esc_attr(get_option('ca_openai_key')) . '" style="width:100%;"><p class="description"><a href="https://platform.openai.com/api-keys" target="_blank">Get OpenAI API Key</a></p></td></tr>';
@@ -309,6 +318,19 @@ class CA_Admin {
         echo '<tr><th><label style="font-weight:bold;">Google Gemini API Key</label></th><td>';
         echo '<input type="password" name="ca_gemini_key" value="' . esc_attr(get_option('ca_gemini_key')) . '" style="width:100%;"><p class="description"><a href="https://aistudio.google.com/app/apikey" target="_blank">Get Google Gemini API Key</a></p></td></tr>';
         
+        echo '<tr><th><label style="font-weight:bold;">Groq API Key</label></th><td>';
+        echo '<input type="password" name="ca_groq_key" value="' . esc_attr(get_option('ca_groq_key')) . '" style="width:100%;"><p class="description"><a href="https://console.groq.com/keys" target="_blank">Get Groq API Key (Llama 3)</a></p></td></tr>';
+        
+        echo '<tr><th><label style="font-weight:bold;">DeepSeek API Key</label></th><td>';
+        echo '<input type="password" name="ca_deepseek_key" value="' . esc_attr(get_option('ca_deepseek_key')) . '" style="width:100%;"><p class="description"><a href="https://platform.deepseek.com/api_keys" target="_blank">Get DeepSeek API Key</a></p></td></tr>';
+        
+        echo '<tr><th><label style="font-weight:bold;">Alibaba Qwen API Key</label></th><td>';
+        echo '<input type="password" name="ca_qwen_key" value="' . esc_attr(get_option('ca_qwen_key')) . '" style="width:100%;"><p class="description"><a href="https://dashscope.console.aliyun.com/apiKey" target="_blank">Get DashScope (Qwen) API Key</a></p></td></tr>';
+        
+        echo '</table>';
+
+        echo '<h3 style="border-bottom:1px solid #ccc; padding-bottom:10px; margin-top:30px;">4. Image Generation API Keys</h3>';
+        echo '<table class="form-table">';
         echo '<tr><th><label style="font-weight:bold;">Unsplash API Key</label></th><td>';
         echo '<input type="password" name="ca_unsplash_key" value="' . esc_attr(get_option('ca_unsplash_key')) . '" style="width:100%;"><p class="description"><a href="https://unsplash.com/developers" target="_blank">Get Unsplash API Key</a></p></td></tr>';
         

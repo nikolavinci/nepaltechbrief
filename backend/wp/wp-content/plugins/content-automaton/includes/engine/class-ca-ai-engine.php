@@ -134,7 +134,7 @@ class CA_AI_Engine {
                 }
                 update_post_meta($post_id, 'ca_original_url', implode("\n", $original_urls));
                 
-                $this->log_success("Successfully synthesized cluster {$cluster_id} (" . count($urls) . " sources) into article: " . $data['title']);
+                $this->log_success("Successfully synthesized cluster {$cluster_id} into article: " . $data['title']);
             } else {
                 $this->log_error("Failed to insert synthesized post into DB for cluster {$cluster_id}");
                 foreach ($urls as $u) {
@@ -147,35 +147,69 @@ class CA_AI_Engine {
     private function call_provider($prompt) {
         $provider = get_option('ca_ai_provider', 'openai');
         
-        if ($provider == 'openai') {
-            $key = get_option('ca_openai_key');
+        if (in_array($provider, ['openai', 'groq', 'deepseek', 'qwen'])) {
+            $key_map = [
+                'openai' => 'ca_openai_key',
+                'groq' => 'ca_groq_key',
+                'deepseek' => 'ca_deepseek_key',
+                'qwen' => 'ca_qwen_key'
+            ];
+            $url_map = [
+                'openai' => 'https://api.openai.com/v1/chat/completions',
+                'groq' => 'https://api.groq.com/openai/v1/chat/completions',
+                'deepseek' => 'https://api.deepseek.com/chat/completions',
+                'qwen' => 'https://dashscope-intl.aliyuncs.com/compatible-mode/v1/chat/completions'
+            ];
+            $model_map = [
+                'openai' => 'gpt-4o-mini',
+                'groq' => 'llama3-70b-8192',
+                'deepseek' => 'deepseek-chat',
+                'qwen' => 'qwen-turbo'
+            ];
+            
+            $key = get_option($key_map[$provider]);
             if (empty($key)) {
-                $this->log_error("OpenAI API Key is missing. Generation paused.");
+                $this->log_error(strtoupper($provider) . " API Key is missing. Generation paused.");
                 return false;
             }
             
-            $response = wp_remote_post('https://api.openai.com/v1/chat/completions', [
+            $url = $url_map[$provider];
+            $model = $model_map[$provider];
+            
+            $payload = ['model' => $model, 'messages' => [['role' => 'user', 'content' => $prompt]], 'temperature' => 0.7];
+            
+            // OpenAI and DeepSeek support json_object natively well
+            if ($provider == 'openai' || $provider == 'deepseek') {
+                $payload['response_format'] = ['type' => 'json_object'];
+            }
+            
+            $response = wp_remote_post($url, [
                 'headers' => ['Authorization' => 'Bearer ' . $key, 'Content-Type' => 'application/json'],
-                'body' => json_encode(['model' => 'gpt-4o-mini', 'messages' => [['role' => 'user', 'content' => $prompt]], 'temperature' => 0.7, 'response_format' => ['type' => 'json_object']]),
+                'body' => json_encode($payload),
                 'timeout' => 90
             ]);
             
             if (is_wp_error($response)) {
-                $this->log_error("OpenAI Connection Error: " . $response->get_error_message());
+                $this->log_error(strtoupper($provider) . " Connection Error: " . $response->get_error_message());
                 return false;
             }
             
             $body = json_decode(wp_remote_retrieve_body($response), true);
             if (isset($body['error'])) {
-                $this->log_error("OpenAI API Error: " . $body['error']['message']);
+                $this->log_error(strtoupper($provider) . " API Error: " . json_encode($body['error']));
                 return false;
             }
             
             if (isset($body['usage'])) {
-                $this->track_usage('openai', $body['usage']['prompt_tokens'], $body['usage']['completion_tokens']);
+                $this->track_usage($provider, $body['usage']['prompt_tokens'], $body['usage']['completion_tokens']);
             }
             
-            return $body['choices'][0]['message']['content'] ?? false;
+            $content = $body['choices'][0]['message']['content'] ?? false;
+            if ($content) {
+                $content = preg_replace('/```json\s*/', '', $content);
+                $content = preg_replace('/```/', '', $content);
+            }
+            return $content;
             
         } elseif ($provider == 'gemini') {
             $key = get_option('ca_gemini_key');
@@ -205,7 +239,13 @@ class CA_AI_Engine {
                 $this->track_usage('gemini', $body['usageMetadata']['promptTokenCount'], $body['usageMetadata']['candidatesTokenCount']);
             }
             
-            return $body['candidates'][0]['content']['parts'][0]['text'] ?? false;
+            $text = $body['candidates'][0]['content']['parts'][0]['text'] ?? false;
+            if ($text) {
+                $text = preg_replace('/```json\s*/', '', $text);
+                $text = preg_replace('/```/', '', $text);
+                return trim($text);
+            }
+            return false;
         }
         return false;
     }
@@ -216,6 +256,12 @@ class CA_AI_Engine {
             $cost = ($prompt_tokens / 1000000 * 0.150) + ($completion_tokens / 1000000 * 0.600);
         } elseif ($provider == 'gemini') {
             $cost = ($prompt_tokens / 1000000 * 0.075) + ($completion_tokens / 1000000 * 0.300);
+        } elseif ($provider == 'groq') {
+            $cost = ($prompt_tokens / 1000000 * 0.59) + ($completion_tokens / 1000000 * 0.79);
+        } elseif ($provider == 'deepseek') {
+            $cost = ($prompt_tokens / 1000000 * 0.14) + ($completion_tokens / 1000000 * 0.28);
+        } elseif ($provider == 'qwen') {
+            $cost = ($prompt_tokens / 1000000 * 0.003) + ($completion_tokens / 1000000 * 0.006);
         }
         
         $total_tokens = get_option('ca_total_tokens', 0) + $prompt_tokens + $completion_tokens;
