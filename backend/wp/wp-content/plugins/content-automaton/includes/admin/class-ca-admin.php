@@ -17,6 +17,7 @@ class CA_Admin {
             update_option('ca_engine_status', sanitize_text_field($_POST['ca_engine_status']));
             update_option('ca_cron_num', intval($_POST['ca_cron_num']));
             update_option('ca_cron_unit', sanitize_text_field($_POST['ca_cron_unit']));
+            update_option('ca_timezone', sanitize_text_field($_POST['ca_timezone']));
             
             update_option('ca_ai_provider', sanitize_text_field($_POST['ca_ai_provider']));
             
@@ -210,6 +211,18 @@ class CA_Admin {
         echo '</form></div>';
     }
 
+    private function get_formatted_time($mysql_time) {
+        if (!$mysql_time) return '-';
+        $timezone = get_option('ca_timezone', 'Asia/Kathmandu');
+        try {
+            $dt = new DateTime($mysql_time, new DateTimeZone('UTC'));
+            $dt->setTimezone(new DateTimeZone($timezone));
+            return $dt->format('Y-m-d H:i:s');
+        } catch (Exception $e) {
+            return $mysql_time;
+        }
+    }
+
     private function render_archive() {
         global $wpdb;
         $drafts = $wpdb->get_results("SELECT * FROM {$wpdb->prefix}ca_urls ORDER BY id DESC LIMIT 100");
@@ -217,10 +230,10 @@ class CA_Admin {
         echo '<h2>URL History & Archive</h2>';
         echo '<p>This is a complete record of all discovered URLs. The engine permanently remembers these to prevent duplicate articles from ever being generated again.</p>';
         echo '<table class="wp-list-table widefat fixed striped">';
-        echo '<thead><tr><th>Article URL</th><th>Cluster ID</th><th>Processing Status</th><th>Retries</th><th>Generated WP Post</th></tr></thead><tbody>';
+        echo '<thead><tr><th>Discovered Date/Time</th><th>Article URL</th><th>Cluster ID</th><th>Processing Status</th><th>Retries</th><th>Generated WP Post</th></tr></thead><tbody>';
         
         if (empty($drafts)) {
-            echo '<tr><td colspan="5">No articles processed yet.</td></tr>';
+            echo '<tr><td colspan="6">No articles processed yet.</td></tr>';
         } else {
             foreach($drafts as $d) {
                 $status = strtoupper($d->status);
@@ -230,7 +243,11 @@ class CA_Admin {
                     $title = get_the_title($d->post_id);
                     $post_link = "<a href='{$edit_url}'>Edit " . esc_html($title ? $title : '(No Title)') . "</a>";
                 }
+                
+                $formatted_date = $this->get_formatted_time($d->discovered_at);
+                
                 echo "<tr>
+                    <td><strong>{$formatted_date}</strong></td>
                     <td><a href='" . esc_url($d->url) . "' target='_blank'>" . esc_html($d->url) . "</a></td>
                     <td>" . esc_html($d->cluster_id) . "</td>
                     <td><strong>{$status}</strong></td>
@@ -258,8 +275,10 @@ class CA_Admin {
                 if ($l->level == 'ERROR') $color = 'color:red; font-weight:bold;';
                 if ($l->level == 'SUCCESS') $color = 'color:green; font-weight:bold;';
                 
+                $formatted_time = $this->get_formatted_time($l->time);
+                
                 echo "<tr>
-                    <td>" . esc_html($l->time) . "</td>
+                    <td>" . esc_html($formatted_time) . "</td>
                     <td style='{$color}'>" . esc_html($l->level) . "</td>
                     <td>" . esc_html(strtoupper($l->action)) . "</td>
                     <td>" . esc_html($l->message) . "</td>
@@ -284,6 +303,22 @@ class CA_Admin {
         echo '<tr><th><label style="font-weight:bold;">Cron Schedule</label></th><td>';
         echo 'Run every <input type="number" name="ca_cron_num" value="' . esc_attr($cron_num) . '" min="1" style="width:80px;"> ';
         echo '<select name="ca_cron_unit"><option value="minutes" ' . selected($cron_unit, 'minutes', false) . '>Minutes</option><option value="hours" ' . selected($cron_unit, 'hours', false) . '>Hours</option><option value="days" ' . selected($cron_unit, 'days', false) . '>Days</option></select></td></tr>';
+        
+        $timezone = get_option('ca_timezone', 'Asia/Kathmandu');
+        $timezones = [
+            'UTC' => 'UTC',
+            'Asia/Kathmandu' => 'Kathmandu, Nepal (NPT)',
+            'Asia/Kolkata' => 'Kolkata, India (IST)',
+            'America/New_York' => 'New York (EST)',
+            'Europe/London' => 'London (GMT)'
+        ];
+        echo '<tr><th><label style="font-weight:bold;">Log & Archive Timezone</label></th><td>';
+        echo '<select name="ca_timezone" style="width:100%;">';
+        foreach ($timezones as $tz_val => $tz_label) {
+            echo '<option value="' . esc_attr($tz_val) . '" ' . selected($timezone, $tz_val, false) . '>' . esc_html($tz_label) . '</option>';
+        }
+        echo '</select></td></tr>';
+        
         echo '</table>';
         
         echo '<h3 style="border-bottom:1px solid #ccc; padding-bottom:10px; margin-top:30px;">2. AI Prompt & SEO Languages</h3>';
