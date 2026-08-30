@@ -3,7 +3,7 @@
  * Plugin Name: Content Automaton
  * Plugin URI: https://nikolavinci.com
  * Description: Enterprise SEO/AEO/GEO/AIO Content Optimization pipeline. Seamlessly integrates external Python triggers and internal Queue-based fetching.
- * Version: 2.4.0
+ * Version: 2.7.1
  * Author: nikolavinci
  */
 
@@ -13,7 +13,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 define( 'CA_DIR', plugin_dir_path( __FILE__ ) );
 define( 'CA_URL', plugin_dir_url( __FILE__ ) );
-define( 'CA_VERSION', '2.4.0' );
+define( 'CA_VERSION', '2.7.1' );
 
 require_once CA_DIR . 'includes/db/class-ca-db.php';
 require_once CA_DIR . 'includes/admin/class-ca-admin.php';
@@ -33,4 +33,5 @@ add_action( 'plugins_loaded', function() {
     new CA_Admin();
     new CA_Rest_Bridge();
     new CA_Queue();
+    new CA_AI_Engine();
 } );
