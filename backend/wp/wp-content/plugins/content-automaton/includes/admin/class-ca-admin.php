@@ -64,6 +64,7 @@ class CA_Admin {
         echo '<a href="?page=content-automaton&tab=dashboard" class="nav-tab ' . ($tab == 'dashboard' ? 'nav-tab-active' : '') . '">Overview & Manual Run</a>';
         echo '<a href="?page=content-automaton&tab=sources" class="nav-tab ' . ($tab == 'sources' ? 'nav-tab-active' : '') . '">News Sources</a>';
         echo '<a href="?page=content-automaton&tab=drafts" class="nav-tab ' . ($tab == 'drafts' ? 'nav-tab-active' : '') . '">Drafted Articles</a>';
+        echo '<a href="?page=content-automaton&tab=logs" class="nav-tab ' . ($tab == 'logs' ? 'nav-tab-active' : '') . '">System Logs (Errors)</a>';
         echo '<a href="?page=content-automaton&tab=settings" class="nav-tab ' . ($tab == 'settings' ? 'nav-tab-active' : '') . '">Engine Settings</a>';
         echo '</h2>';
         
@@ -72,6 +73,7 @@ class CA_Admin {
         if ($tab == 'dashboard') $this->render_overview();
         elseif ($tab == 'sources') $this->render_sources();
         elseif ($tab == 'drafts') $this->render_drafts();
+        elseif ($tab == 'logs') $this->render_logs();
         elseif ($tab == 'settings') $this->render_settings();
         
         echo '</div></div>';
@@ -103,7 +105,7 @@ class CA_Admin {
         <script>
         jQuery(document).ready(function($) {
             $('#ca-btn-run').click(function() {
-                var log = $('#ca-run-log').show().html('<span style="color:#f59e0b;">Starting Discovery Queue...</span>');
+                var log = $('#ca-run-log').show().html('<span style="color:#f59e0b;">Starting Queue Executions... (Check System Logs tab for errors if drafts do not appear)</span>');
                 $.post(ajaxurl, {action: 'ca_manual_run'}, function(res) {
                     log.html('<span style="color:#10b981;">' + res.data + '</span>');
                 }).fail(function() {
@@ -174,7 +176,7 @@ class CA_Admin {
         echo '<thead><tr><th>WordPress Draft</th><th>Original Source URL</th><th>Discovered Date</th></tr></thead><tbody>';
         
         if (empty($drafts)) {
-            echo '<tr><td colspan="3">No drafts generated yet.</td></tr>';
+            echo '<tr><td colspan="3">No drafts generated yet. Run the queue from the overview tab to generate articles.</td></tr>';
         } else {
             foreach($drafts as $d) {
                 if ($d->post_id) {
@@ -186,6 +188,34 @@ class CA_Admin {
                         <td>" . esc_html($d->discovered_at) . "</td>
                     </tr>";
                 }
+            }
+        }
+        echo '</tbody></table>';
+    }
+    
+    private function render_logs() {
+        global $wpdb;
+        $logs = $wpdb->get_results("SELECT * FROM {$wpdb->prefix}ca_logs ORDER BY id DESC LIMIT 100");
+        
+        echo '<h2>System & Error Logs</h2>';
+        echo '<p>Check here for AI API errors, insufficient funds, or missing API keys.</p>';
+        echo '<table class="wp-list-table widefat fixed striped">';
+        echo '<thead><tr><th>Time</th><th>Level</th><th>Action</th><th>Message</th></tr></thead><tbody>';
+        
+        if (empty($logs)) {
+            echo '<tr><td colspan="4">No logs generated yet.</td></tr>';
+        } else {
+            foreach($logs as $l) {
+                $color = '';
+                if ($l->level == 'ERROR') $color = 'color:red; font-weight:bold;';
+                if ($l->level == 'SUCCESS') $color = 'color:green; font-weight:bold;';
+                
+                echo "<tr>
+                    <td>" . esc_html($l->time) . "</td>
+                    <td style='{$color}'>" . esc_html($l->level) . "</td>
+                    <td>" . esc_html(strtoupper($l->action)) . "</td>
+                    <td>" . esc_html($l->message) . "</td>
+                </tr>";
             }
         }
         echo '</tbody></table>';
