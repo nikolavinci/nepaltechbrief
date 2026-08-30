@@ -11,8 +11,13 @@ class CA_AI_Engine {
     
     public function process_generation() {
         global $wpdb;
+        $wpdb->insert($wpdb->prefix . 'ca_logs', ['action' => 'generation', 'level' => 'INFO', 'message' => "Starting AI generation queue..."]);
+        
         $urls = $wpdb->get_results("SELECT * FROM {$wpdb->prefix}ca_urls WHERE status = 'ready_for_ai' LIMIT 3");
-        if (empty($urls)) return;
+        if (empty($urls)) {
+            $wpdb->insert($wpdb->prefix . 'ca_logs', ['action' => 'generation', 'level' => 'INFO', 'message' => "No articles ready for AI generation."]);
+            return;
+        }
         
         foreach ($urls as $url_row) {
             $wpdb->update($wpdb->prefix . 'ca_urls', ['status' => 'generating'], ['id' => $url_row->id]);
