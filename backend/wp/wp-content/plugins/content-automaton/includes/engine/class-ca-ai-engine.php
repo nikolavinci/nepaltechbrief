@@ -25,9 +25,15 @@ class CA_AI_Engine {
             $source = $wpdb->get_row($wpdb->prepare("SELECT * FROM {$wpdb->prefix}ca_sources WHERE id = %d", $url_row->source_id));
             if (!$source) continue;
             
-            $response = wp_remote_get($url_row->url, ['timeout' => 15]);
-            if (is_wp_error($response)) {
-                $this->log_error("Failed to fetch article body for {$url_row->url}");
+            $response = wp_remote_get($url_row->url, [
+                'timeout' => 30,
+                'user-agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                'sslverify' => false
+            ]);
+            
+            if (is_wp_error($response) || wp_remote_retrieve_response_code($response) != 200) {
+                $err = is_wp_error($response) ? $response->get_error_message() : wp_remote_retrieve_response_code($response);
+                $this->log_error("Failed to fetch article body for {$url_row->url} (Error/Code: {$err})");
                 $wpdb->update($wpdb->prefix . 'ca_urls', ['status' => 'failed'], ['id' => $url_row->id]);
                 continue;
             }
