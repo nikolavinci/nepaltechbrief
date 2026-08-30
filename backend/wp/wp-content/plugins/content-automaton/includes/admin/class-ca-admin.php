@@ -59,7 +59,6 @@ class CA_Admin {
             echo '<div class="notice notice-success"><p>Settings Saved & Engine Updated!</p></div>';
         }
         
-        // ... (Skipping some unchanged parts like ca_add_source for brevity, actually I should include them to keep the file valid)
         if (isset($_POST['ca_add_source'])) {
             global $wpdb;
             $wpdb->insert($wpdb->prefix . 'ca_sources', [
@@ -324,7 +323,7 @@ class CA_Admin {
         
         // Gemini
         echo '<tr><th><label style="font-weight:bold;">Gemini Model & API Key</label></th><td>';
-        echo '<input type="text" name="ca_gemini_model" value="' . esc_attr(get_option('ca_gemini_model', 'gemini-2.5-flash')) . '" style="width:30%; margin-right:2%;" placeholder="e.g. gemini-2.5-flash">';
+        echo '<input type="text" name="ca_gemini_model" value="' . esc_attr(get_option('ca_gemini_model', 'gemini-3.6-flash')) . '" style="width:30%; margin-right:2%;" placeholder="e.g. gemini-3.6-flash">';
         echo '<input type="password" name="ca_gemini_key" value="' . esc_attr(get_option('ca_gemini_key')) . '" style="width:68%;" placeholder="Gemini API Key"></td></tr>';
         
         // OpenAI

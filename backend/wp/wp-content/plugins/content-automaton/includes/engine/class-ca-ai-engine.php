@@ -223,8 +223,8 @@ class CA_AI_Engine {
                 return false;
             }
             
-            $model = get_option('ca_gemini_model', 'gemini-1.5-flash');
-            if (empty($model)) $model = 'gemini-1.5-flash';
+            $model = get_option('ca_gemini_model', 'gemini-3.6-flash');
+            if (empty($model)) $model = 'gemini-3.6-flash';
             
             $url = "https://generativelanguage.googleapis.com/v1beta/models/{$model}:generateContent?key={$key}";
             
