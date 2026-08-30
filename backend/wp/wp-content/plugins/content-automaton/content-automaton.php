@@ -16,7 +16,7 @@ add_action('admin_menu', function() {
     add_menu_page(
         'Automaton',
         'Automaton',
-        'manage_options',
+        'publish_posts',
         'content-automaton',
         'ca_automaton_admin_page',
         'dashicons-admin-network',
@@ -265,3 +265,4 @@ function ca_automaton_publish_post( WP_REST_Request $request ) {
         'url'     => get_permalink( $post_id )
     ) );
 }
+
