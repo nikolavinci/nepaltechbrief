@@ -24,7 +24,9 @@ class CA_AI_Engine {
         $recent_posts = get_posts(['numberposts' => 10, 'post_status' => 'publish']);
         $internal_links_context = "";
         foreach ($recent_posts as $rp) {
-            $internal_links_context .= "- " . esc_html($rp->post_title) . " (URL: " . get_permalink($rp->ID) . ")\n";
+            // Fix API domain for internal links (ensure it points to frontend neptechbrief.com)
+            $frontend_link = str_replace('api.neptechbrief.com', 'neptechbrief.com', get_permalink($rp->ID));
+            $internal_links_context .= "- " . esc_html($rp->post_title) . " (URL: " . $frontend_link . ")\n";
         }
         
         foreach ($cluster_ids as $cluster_id) {
@@ -64,17 +66,32 @@ class CA_AI_Engine {
                 continue;
             }
             
-            $base_prompt = get_option('ca_custom_prompt', 'Reword this article including the title and write it in Nepali to avoid plagiarism and suggest prompt for AI image generation, slug, tags, category (english) and nepali, meta description.');
+            $default_prompt = "Reword this article including the title and write it ENTIRELY in Nepali (every single paragraph, heading, and text must be in Nepali) to avoid plagiarism and suggest prompt for AI image generation, slug, tags, category (english) and nepali, meta description, and a short excerpt in Nepali.";
+            $base_prompt = get_option('ca_custom_prompt', $default_prompt);
             
             $synthesis_rules = "CRITICAL INSTRUCTIONS:\n";
             $synthesis_rules .= "1. SYNTHESIS: You have been provided multiple sources for the exact same event. Synthesize them into ONE comprehensive original article.\n";
             $synthesis_rules .= "2. STRIP COMPETITORS: Do not mention the original source publishers, authors, or brands (e.g. 'According to TechPana', 'OnlineKhabar reports').\n";
             $synthesis_rules .= "3. NO EXTERNAL LINKS: Strip any external HTML links from the content.\n";
             $synthesis_rules .= "4. INTERNAL SEO LINKS: Naturally insert 2 to 3 HTML links inside the text pointing to these related articles from our site. Make the anchor text natural:\n" . $internal_links_context . "\n";
+            $synthesis_rules .= "5. STRICT NEPALI LANGUAGE: The entire output (content, title, excerpt) must be written exclusively in the Nepali language (Devanagari script) unless it's a technical term. Zero English sentences should be left in the generated content.\n";
             
             $lang_slug = get_option('ca_lang_slug', 'english');
             $lang_meta = get_option('ca_lang_meta', 'english');
-            $json_schema = '{"title": "Nepali Title", "content": "HTML formatted content (p, h2, a)", "image_prompt": "English prompt for image generation", "slug": "URL slug in ' . $lang_slug . '", "tags_en": "comma, separated, english, tags", "tags_ne": "comma, separated, nepali, tags", "category_en": "category", "category_ne": "category", "meta_desc": "160 char SEO description in ' . $lang_meta . '", "focus_keyword": "main focus keyword"}';
+            
+            $json_schema = '{
+                "title": "Nepali Title",
+                "content": "HTML formatted content exclusively in Nepali (p, h2, a)",
+                "excerpt_ne": "A short 1 to 2 sentence summary in Nepali",
+                "image_prompt": "English prompt for image generation",
+                "slug": "URL slug in ' . $lang_slug . '",
+                "tags_en": "comma, separated, english, tags",
+                "tags_ne": "comma, separated, nepali, tags",
+                "category_en": "category",
+                "category_ne": "category",
+                "meta_desc": "160 char SEO description in ' . $lang_meta . '",
+                "focus_keyword": "main focus keyword"
+            }';
             
             $prompt = $base_prompt . "\n\n" . $synthesis_rules . "\nReturn ONLY a valid JSON object matching this exact structure: " . $json_schema . "\n\nTEXT SOURCES:\n" . $combined_text;
             
@@ -115,6 +132,8 @@ class CA_AI_Engine {
                 'post_author' => 1,
                 'tags_input' => sanitize_text_field($tags_input)
             ];
+            
+            if (!empty($data['excerpt_ne'])) $post_data['post_excerpt'] = sanitize_text_field($data['excerpt_ne']);
             if ($source) $post_data['post_category'] = [$source->default_category];
             if (!empty($data['slug'])) $post_data['post_name'] = sanitize_title($data['slug']);
             

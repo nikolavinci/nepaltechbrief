@@ -289,7 +289,7 @@ class CA_Admin {
         echo '<h3 style="border-bottom:1px solid #ccc; padding-bottom:10px; margin-top:30px;">2. AI Prompt & SEO Languages</h3>';
         echo '<table class="form-table">';
         
-        $default_prompt = "Reword this article including the title and write it in Nepali to avoid plagiarism and suggest prompt for AI image generation, slug, tags, category (english) and nepali, meta description.";
+        $default_prompt = "Reword this article including the title and write it ENTIRELY in Nepali (every single paragraph, heading, and text must be in Nepali) to avoid plagiarism and suggest prompt for AI image generation, slug, tags, category (english) and nepali, meta description, and a short excerpt in Nepali.";
         $prompt = get_option('ca_custom_prompt', $default_prompt);
         echo '<tr><th><label style="font-weight:bold;">Custom System Prompt</label></th><td>';
         echo '<textarea name="ca_custom_prompt" rows="5" style="width:100%;">' . esc_textarea($prompt) . '</textarea></td></tr>';
