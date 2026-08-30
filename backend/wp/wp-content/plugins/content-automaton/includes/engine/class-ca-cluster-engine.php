@@ -10,7 +10,9 @@ class CA_Cluster_Engine {
         global $wpdb;
         $wpdb->insert($wpdb->prefix . 'ca_logs', ['action' => 'clustering', 'level' => 'INFO', 'message' => "Starting AI clustering queue..."]);
         
-        $urls = $wpdb->get_results("SELECT * FROM {$wpdb->prefix}ca_urls WHERE status = 'ready_for_clustering' LIMIT 20");
+        // Pick up anything ready for clustering, plus legacy ready_for_ai, plus ai_failed that don't have a cluster yet
+        $urls = $wpdb->get_results("SELECT * FROM {$wpdb->prefix}ca_urls WHERE status IN ('ready_for_clustering', 'ready_for_ai') OR (status = 'ai_failed' AND (cluster_id IS NULL OR cluster_id = 0)) LIMIT 20");
+        
         if (empty($urls)) {
             $wpdb->insert($wpdb->prefix . 'ca_logs', ['action' => 'clustering', 'level' => 'INFO', 'message' => "No articles ready for clustering."]);
             return;
@@ -18,7 +20,7 @@ class CA_Cluster_Engine {
         
         if (count($urls) == 1) {
             $wpdb->update($wpdb->prefix . 'ca_urls', ['status' => 'clustered', 'cluster_id' => $urls[0]->id], ['id' => $urls[0]->id]);
-            $wpdb->insert($wpdb->prefix . 'ca_logs', ['action' => 'clustering', 'level' => 'INFO', 'message' => "Only 1 article found. Skipping AI cluster and passing to generation."]);
+            $wpdb->insert($wpdb->prefix . 'ca_logs', ['action' => 'clustering', 'level' => 'INFO', 'message' => "Only 1 article found. Skipping AI cluster and assigning cluster ID " . $urls[0]->id]);
             return;
         }
         
@@ -35,7 +37,10 @@ class CA_Cluster_Engine {
         $prompt = "You are an AI News clustering bot. Group these news articles into semantic clusters based on their exact topic/event. Group them ONLY if they are reporting on the exact same news event. If an article is unique, put it in a cluster by itself. Return ONLY a valid JSON array of arrays of IDs. Example output: [[1, 2], [3], [4, 5]].\n\nArticles:\n" . implode("\n", $payload_items);
         
         $ai_response = $this->call_provider($prompt);
-        if (!$ai_response) return;
+        if (!$ai_response) {
+            $wpdb->insert($wpdb->prefix . 'ca_logs', ['action' => 'clustering', 'level' => 'ERROR', 'message' => "Clustering aborted due to AI Provider error. (Check keys/credits)"]);
+            return;
+        }
         
         $clusters = json_decode($ai_response, true);
         if (!is_array($clusters)) {
@@ -79,26 +84,42 @@ class CA_Cluster_Engine {
             ];
             
             $key = get_option($key_map[$provider]);
-            if (empty($key)) return false;
+            if (empty($key)) {
+                $this->log_error("Clustering Error: " . strtoupper($provider) . " API Key is missing.");
+                return false;
+            }
             
             $url = $url_map[$provider];
             $model = $model_map[$provider];
             
+            $payload = ['model' => $model, 'messages' => [['role' => 'user', 'content' => $prompt]], 'temperature' => 0.2];
+            
+            if ($provider == 'openai' || $provider == 'deepseek') {
+                $payload['response_format'] = ['type' => 'json_object'];
+            }
+            
             $response = wp_remote_post($url, [
                 'headers' => ['Authorization' => 'Bearer ' . $key, 'Content-Type' => 'application/json'],
-                'body' => json_encode(['model' => $model, 'messages' => [['role' => 'user', 'content' => $prompt]], 'temperature' => 0.2]),
+                'body' => json_encode($payload),
                 'timeout' => 45
             ]);
             
-            if (is_wp_error($response)) return false;
+            if (is_wp_error($response)) {
+                $this->log_error("Clustering Error (" . strtoupper($provider) . "): " . $response->get_error_message());
+                return false;
+            }
+            
             $body = json_decode(wp_remote_retrieve_body($response), true);
+            if (isset($body['error'])) {
+                $this->log_error("Clustering API Error (" . strtoupper($provider) . "): " . json_encode($body['error']));
+                return false;
+            }
             
             if (isset($body['usage'])) {
                 $this->track_usage($provider, $body['usage']['prompt_tokens'], $body['usage']['completion_tokens']);
             }
             
             $content = $body['choices'][0]['message']['content'] ?? false;
-            // Clean markdown json if present
             if ($content) {
                 $content = preg_replace('/```json\s*/', '', $content);
                 $content = preg_replace('/```/', '', $content);
@@ -107,7 +128,10 @@ class CA_Cluster_Engine {
             
         } elseif ($provider == 'gemini') {
             $key = get_option('ca_gemini_key');
-            if (empty($key)) return false;
+            if (empty($key)) {
+                $this->log_error("Clustering Error: Gemini API Key is missing.");
+                return false;
+            }
             
             $response = wp_remote_post('https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=' . $key, [
                 'headers' => ['Content-Type' => 'application/json'],
@@ -115,8 +139,16 @@ class CA_Cluster_Engine {
                 'timeout' => 45
             ]);
             
-            if (is_wp_error($response)) return false;
+            if (is_wp_error($response)) {
+                $this->log_error("Clustering Error (Gemini): " . $response->get_error_message());
+                return false;
+            }
+            
             $body = json_decode(wp_remote_retrieve_body($response), true);
+            if (isset($body['error'])) {
+                $this->log_error("Clustering API Error (Gemini): " . $body['error']['message']);
+                return false;
+            }
             
             if (isset($body['usageMetadata'])) {
                 $this->track_usage('gemini', $body['usageMetadata']['promptTokenCount'], $body['usageMetadata']['candidatesTokenCount']);
@@ -152,5 +184,10 @@ class CA_Cluster_Engine {
         
         update_option('ca_total_tokens', $total_tokens);
         update_option('ca_total_cost', $total_cost);
+    }
+    
+    private function log_error($message) {
+        global $wpdb;
+        $wpdb->insert($wpdb->prefix . 'ca_logs', ['action' => 'clustering', 'level' => 'ERROR', 'message' => $message]);
     }
 }
