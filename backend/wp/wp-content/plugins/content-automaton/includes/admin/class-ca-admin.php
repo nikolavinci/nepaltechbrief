@@ -7,15 +7,7 @@ class CA_Admin {
     }
 
     public function add_menu() {
-        add_menu_page(
-            'AI Content Automaton',
-            'AI Automaton',
-            'publish_posts',
-            'content-automaton',
-            [ $this, 'render_dashboard' ],
-            'dashicons-superhero',
-            6
-        );
+        add_menu_page('AI Content Automaton', 'AI Automaton', 'publish_posts', 'content-automaton', [ $this, 'render_dashboard' ], 'dashicons-superhero', 6);
     }
 
     public function render_dashboard() {
@@ -23,25 +15,37 @@ class CA_Admin {
         
         // Handle Settings Save
         if (isset($_POST['ca_save_api_settings'])) {
+            update_option('ca_engine_status', sanitize_text_field($_POST['ca_engine_status']));
+            update_option('ca_cron_schedule', sanitize_text_field($_POST['ca_cron_schedule']));
             update_option('ca_ai_provider', sanitize_text_field($_POST['ca_ai_provider']));
             update_option('ca_openai_key', sanitize_text_field($_POST['ca_openai_key']));
             update_option('ca_gemini_key', sanitize_text_field($_POST['ca_gemini_key']));
-            echo '<div class="notice notice-success"><p>API Settings Saved!</p></div>';
+            
+            // Reschedule cron if schedule changed
+            wp_clear_scheduled_hook('ca_process_discovery_queue');
+            wp_clear_scheduled_hook('ca_process_fetch_queue');
+            wp_clear_scheduled_hook('ca_process_generation_queue');
+            
+            if ($_POST['ca_engine_status'] == 'running') {
+                $schedule = sanitize_text_field($_POST['ca_cron_schedule']);
+                wp_schedule_event(time(), $schedule, 'ca_process_discovery_queue');
+                wp_schedule_event(time(), $schedule, 'ca_process_fetch_queue');
+                wp_schedule_event(time(), $schedule, 'ca_process_generation_queue');
+            }
+            
+            echo '<div class="notice notice-success"><p>Settings Saved & Engine Updated!</p></div>';
         }
         
         // Handle Source Add
         if (isset($_POST['ca_add_source'])) {
             global $wpdb;
-            $wpdb->insert(
-                $wpdb->prefix . 'ca_sources',
-                [
-                    'name' => sanitize_text_field($_POST['source_name']),
-                    'url' => esc_url_raw($_POST['source_url']),
-                    'type' => 'rss',
-                    'default_category' => intval($_POST['source_category']),
-                    'auto_publish' => isset($_POST['auto_publish']) ? 1 : 0
-                ]
-            );
+            $wpdb->insert($wpdb->prefix . 'ca_sources', [
+                'name' => sanitize_text_field($_POST['source_name']),
+                'url' => esc_url_raw($_POST['source_url']),
+                'type' => 'rss',
+                'default_category' => intval($_POST['source_category']),
+                'auto_publish' => isset($_POST['auto_publish']) ? 1 : 0
+            ]);
             echo '<div class="notice notice-success"><p>New Source Added Successfully!</p></div>';
         }
         
@@ -55,23 +59,18 @@ class CA_Admin {
         echo '<div class="wrap">';
         echo '<h1 style="margin-bottom:20px; font-weight:800; color:#2563eb;">AI Content Automaton</h1>';
         echo '<h2 class="nav-tab-wrapper" style="border-bottom: 2px solid #e5e7eb;">';
-        echo '<a href="?page=content-automaton&tab=dashboard" class="nav-tab ' . ($tab == 'dashboard' ? 'nav-tab-active' : '') . '">Overview</a>';
+        echo '<a href="?page=content-automaton&tab=dashboard" class="nav-tab ' . ($tab == 'dashboard' ? 'nav-tab-active' : '') . '">Overview & Manual Run</a>';
         echo '<a href="?page=content-automaton&tab=sources" class="nav-tab ' . ($tab == 'sources' ? 'nav-tab-active' : '') . '">News Sources</a>';
-        echo '<a href="?page=content-automaton&tab=settings" class="nav-tab ' . ($tab == 'settings' ? 'nav-tab-active' : '') . '">AI Settings</a>';
+        echo '<a href="?page=content-automaton&tab=settings" class="nav-tab ' . ($tab == 'settings' ? 'nav-tab-active' : '') . '">Engine Settings</a>';
         echo '</h2>';
         
         echo '<div style="background:#fff; padding:30px; border:1px solid #e5e7eb; border-top:none; border-radius: 0 0 8px 8px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">';
         
-        if ($tab == 'dashboard') {
-            $this->render_overview();
-        } elseif ($tab == 'sources') {
-            $this->render_sources();
-        } elseif ($tab == 'settings') {
-            $this->render_settings();
-        }
+        if ($tab == 'dashboard') $this->render_overview();
+        elseif ($tab == 'sources') $this->render_sources();
+        elseif ($tab == 'settings') $this->render_settings();
         
-        echo '</div>';
-        echo '</div>';
+        echo '</div></div>';
     }
 
     private function render_overview() {
@@ -79,21 +78,43 @@ class CA_Admin {
         $total_sources = $wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->prefix}ca_sources");
         $pending_urls = $wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->prefix}ca_urls WHERE status = 'pending'");
         $generated = $wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->prefix}ca_urls WHERE status = 'draft_created'");
+        $status = get_option('ca_engine_status', 'running');
+        $color = $status == 'running' ? '#10b981' : '#ef4444';
         
-        echo '<div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:20px; margin-bottom:30px;">';
+        echo '<div style="display:grid; grid-template-columns: repeat(4, 1fr); gap:20px; margin-bottom:30px;">';
+        $this->stat_card("Engine Status", strtoupper($status), $color);
         $this->stat_card("Active Sources", $total_sources, "#3b82f6");
         $this->stat_card("Articles in Queue", $pending_urls, "#f59e0b");
-        $this->stat_card("AI Articles Generated", $generated, "#10b981");
+        $this->stat_card("AI Articles Generated", $generated, "#8b5cf6");
         echo '</div>';
         
-        echo '<h2>How it works</h2>';
-        echo '<p style="font-size:16px; color:#4b5563; max-width:800px; line-height:1.6;">This internal AI engine runs silently in the background. Once you add an RSS feed in the <strong>Sources</strong> tab, the Automaton will check it every hour. It automatically prevents duplicates, fetches the article text, translates and rewrites it using your configured AI (OpenAI or Gemini), and saves it as a WordPress Draft for you to review and publish!</p>';
+        echo '<h2>Manual Execution</h2>';
+        echo '<p>You can bypass the cron schedule and manually trigger the queue right now.</p>';
+        echo '<div style="display:flex; gap:10px; margin-top:20px;">';
+        echo '<button id="ca-btn-run" class="button button-primary button-large" style="background:#10b981; border-color:#059669;">▶ Force Run Queues Now</button>';
+        echo '</div>';
+        echo '<div id="ca-run-log" style="margin-top:15px; font-weight:bold; padding:15px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:6px; display:none;"></div>';
+        
+        ?>
+        <script>
+        jQuery(document).ready(function($) {
+            $('#ca-btn-run').click(function() {
+                var log = $('#ca-run-log').show().html('<span style="color:#f59e0b;">Starting Discovery Queue...</span>');
+                $.post(ajaxurl, {action: 'ca_manual_run'}, function(res) {
+                    log.html('<span style="color:#10b981;">' + res.data + '</span>');
+                }).fail(function() {
+                    log.html('<span style="color:#ef4444;">Request timed out. The engine is running in the background!</span>');
+                });
+            });
+        });
+        </script>
+        <?php
     }
     
     private function stat_card($title, $value, $color) {
         echo "<div style='background:#f8fafc; border:1px solid #e2e8f0; border-left:4px solid {$color}; padding:20px; border-radius:6px;'>";
         echo "<h3 style='margin:0 0 10px 0; color:#64748b; font-size:14px; text-transform:uppercase;'>{$title}</h3>";
-        echo "<div style='font-size:32px; font-weight:800; color:#0f172a;'>{$value}</div>";
+        echo "<div style='font-size:24px; font-weight:800; color:#0f172a;'>{$value}</div>";
         echo "</div>";
     }
 
@@ -140,18 +161,35 @@ class CA_Admin {
     }
 
     private function render_settings() {
+        $status = get_option('ca_engine_status', 'running');
+        $schedule = get_option('ca_cron_schedule', 'hourly');
         $provider = get_option('ca_ai_provider', 'openai');
         $openai_key = get_option('ca_openai_key', '');
         $gemini_key = get_option('ca_gemini_key', '');
         
-        echo '<h2>AI API Settings</h2>';
-        echo '<p>Configure the AI engine that will automatically rewrite and translate fetched articles.</p>';
+        echo '<h2>Engine Configuration</h2>';
         echo '<form method="post" style="max-width:600px;">';
         
         echo '<table class="form-table">';
+        
+        echo '<tr><th><label style="font-weight:bold;">Engine Status</label></th><td>';
+        echo '<select name="ca_engine_status" style="width:100%;">';
+        echo '<option value="running" ' . selected($status, 'running', false) . '>Running (Cron Active)</option>';
+        echo '<option value="paused" ' . selected($status, 'paused', false) . '>Paused (Cron Disabled)</option>';
+        echo '</select><p class="description">Stop all automated background fetching.</p></td></tr>';
+        
+        echo '<tr><th><label style="font-weight:bold;">Cron Schedule</label></th><td>';
+        echo '<select name="ca_cron_schedule" style="width:100%;">';
+        echo '<option value="hourly" ' . selected($schedule, 'hourly', false) . '>Once Hourly</option>';
+        echo '<option value="twicedaily" ' . selected($schedule, 'twicedaily', false) . '>Twice Daily</option>';
+        echo '<option value="daily" ' . selected($schedule, 'daily', false) . '>Once Daily</option>';
+        echo '</select><p class="description">How often the engine checks for new articles.</p></td></tr>';
+        
+        echo '<tr><td colspan="2"><hr></td></tr>';
+        
         echo '<tr><th><label style="font-weight:bold;">Active AI Provider</label></th><td>';
         echo '<select name="ca_ai_provider" style="width:100%;">';
-        echo '<option value="openai" ' . selected($provider, 'openai', false) . '>OpenAI (GPT-4o-mini) - Recommended</option>';
+        echo '<option value="openai" ' . selected($provider, 'openai', false) . '>OpenAI (GPT-4o-mini)</option>';
         echo '<option value="gemini" ' . selected($provider, 'gemini', false) . '>Google Gemini (1.5 Flash)</option>';
         echo '</select></td></tr>';
         
@@ -165,7 +203,7 @@ class CA_Admin {
         echo '</table>';
         
         echo '<input type="hidden" name="ca_save_api_settings" value="1">';
-        echo '<p style="margin-top:20px;"><button type="submit" class="button button-primary button-large">Save Settings</button></p>';
+        echo '<p style="margin-top:20px;"><button type="submit" class="button button-primary button-large">Save Settings & Restart Engine</button></p>';
         echo '</form>';
     }
 }
