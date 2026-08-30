@@ -13,7 +13,8 @@ class CA_AI_Engine {
         global $wpdb;
         $wpdb->insert($wpdb->prefix . 'ca_logs', ['action' => 'generation', 'level' => 'INFO', 'message' => "Starting AI generation queue..."]);
         
-        $urls = $wpdb->get_results("SELECT * FROM {$wpdb->prefix}ca_urls WHERE status = 'ready_for_ai' LIMIT 3");
+        // Pick up both ready_for_ai and ai_failed (if retries < 3)
+        $urls = $wpdb->get_results("SELECT * FROM {$wpdb->prefix}ca_urls WHERE (status = 'ready_for_ai' OR status = 'ai_failed') AND retry_count < 3 LIMIT 3");
         if (empty($urls)) {
             $wpdb->insert($wpdb->prefix . 'ca_logs', ['action' => 'generation', 'level' => 'INFO', 'message' => "No articles ready for AI generation."]);
             return;
@@ -34,7 +35,7 @@ class CA_AI_Engine {
             if (is_wp_error($response) || wp_remote_retrieve_response_code($response) != 200) {
                 $err = is_wp_error($response) ? $response->get_error_message() : wp_remote_retrieve_response_code($response);
                 $this->log_error("Failed to fetch article body for {$url_row->url} (Error/Code: {$err})");
-                $wpdb->update($wpdb->prefix . 'ca_urls', ['status' => 'failed'], ['id' => $url_row->id]);
+                $wpdb->update($wpdb->prefix . 'ca_urls', ['status' => 'fetch_failed', 'retry_count' => $url_row->retry_count + 1], ['id' => $url_row->id]);
                 continue;
             }
             
@@ -42,7 +43,6 @@ class CA_AI_Engine {
             $clean_text = wp_strip_all_tags($body);
             $clean_text = substr($clean_text, 0, 8000);
             
-            // Build Prompt based on user settings
             $base_prompt = get_option('ca_custom_prompt', 'Reword this article including the title and write it in Nepali to avoid plagiarism and suggest prompt for AI image generation, slug, tags, category (english) and nepali, meta description.');
             $lang_slug = get_option('ca_lang_slug', 'english');
             $lang_meta = get_option('ca_lang_meta', 'english');
@@ -54,18 +54,18 @@ class CA_AI_Engine {
             $ai_response = $this->call_provider($prompt);
             
             if (!$ai_response) {
-                $wpdb->update($wpdb->prefix . 'ca_urls', ['status' => 'failed'], ['id' => $url_row->id]);
+                // Keep it in AI queue for next run, increment retry
+                $wpdb->update($wpdb->prefix . 'ca_urls', ['status' => 'ai_failed', 'retry_count' => $url_row->retry_count + 1], ['id' => $url_row->id]);
                 continue;
             }
             
             $data = json_decode($ai_response, true);
             if (!$data || !isset($data['title']) || !isset($data['content'])) {
                 $this->log_error("AI returned invalid JSON format for {$url_row->url}");
-                $wpdb->update($wpdb->prefix . 'ca_urls', ['status' => 'failed'], ['id' => $url_row->id]);
+                $wpdb->update($wpdb->prefix . 'ca_urls', ['status' => 'ai_failed', 'retry_count' => $url_row->retry_count + 1], ['id' => $url_row->id]);
                 continue;
             }
             
-            // Merge tags based on language setting
             $lang_tags = get_option('ca_lang_tags', 'bilingual');
             $final_tags = [];
             if ($lang_tags == 'english' || $lang_tags == 'bilingual') {
@@ -87,7 +87,6 @@ class CA_AI_Engine {
                 'tags_input' => sanitize_text_field($tags_input)
             ];
             
-            // Apply Slug
             if (!empty($data['slug'])) {
                 $post_data['post_name'] = sanitize_title($data['slug']);
             }
@@ -104,10 +103,10 @@ class CA_AI_Engine {
                 update_post_meta($post_id, 'ca_original_url', $url_row->url);
                 $wpdb->update($wpdb->prefix . 'ca_urls', ['status' => 'draft_created', 'post_id' => $post_id], ['id' => $url_row->id]);
                 
-                $this->log_success("Successfully drafted article: " . $data['title']);
+                $this->log_success("Successfully generated & archived: " . $data['title']);
             } else {
                 $this->log_error("Failed to insert post into WordPress DB for {$url_row->url}");
-                $wpdb->update($wpdb->prefix . 'ca_urls', ['status' => 'failed'], ['id' => $url_row->id]);
+                $wpdb->update($wpdb->prefix . 'ca_urls', ['status' => 'wp_failed', 'retry_count' => $url_row->retry_count + 1], ['id' => $url_row->id]);
             }
         }
     }
@@ -118,7 +117,7 @@ class CA_AI_Engine {
         if ($provider == 'openai') {
             $key = get_option('ca_openai_key');
             if (empty($key)) {
-                $this->log_error("OpenAI API Key is missing.");
+                $this->log_error("OpenAI API Key is missing. Generation paused.");
                 return false;
             }
             
@@ -144,7 +143,7 @@ class CA_AI_Engine {
         } elseif ($provider == 'gemini') {
             $key = get_option('ca_gemini_key');
             if (empty($key)) {
-                $this->log_error("Gemini API Key is missing.");
+                $this->log_error("Gemini API Key is missing. Generation paused.");
                 return false;
             }
             

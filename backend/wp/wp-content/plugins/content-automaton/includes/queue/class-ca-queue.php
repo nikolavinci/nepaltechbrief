@@ -4,7 +4,6 @@ if ( ! defined( 'ABSPATH' ) ) exit;
 class CA_Queue {
     public function __construct() {
         add_filter('cron_schedules', [$this, 'custom_cron_schedule']);
-        
         add_action('ca_process_discovery_queue', [$this, 'process_discovery']);
         add_action('ca_process_fetch_queue', [$this, 'process_fetch']);
         
@@ -20,7 +19,6 @@ class CA_Queue {
         $num = intval(get_option('ca_cron_num', 1));
         $unit = get_option('ca_cron_unit', 'hours');
         if ($num <= 0) $num = 1;
-        
         $seconds = 3600;
         if ($unit == 'minutes') $seconds = $num * 60;
         elseif ($unit == 'hours') $seconds = $num * 3600;
@@ -33,15 +31,12 @@ class CA_Queue {
     public static function add_url_to_queue($source_id, $url) {
         global $wpdb;
         $url_hash = md5($url);
-        $exists = $wpdb->get_var($wpdb->prepare("SELECT id FROM {$wpdb->prefix}ca_urls WHERE url_hash = %s", $url_hash));
         
+        // This is the duplicate prevention lock. If it's in the DB at all (even as draft_created or archived), it's skipped.
+        $exists = $wpdb->get_var($wpdb->prepare("SELECT id FROM {$wpdb->prefix}ca_urls WHERE url_hash = %s", $url_hash));
         if ($exists) return false;
 
-        $wpdb->insert(
-            $wpdb->prefix . 'ca_urls',
-            ['source_id' => $source_id, 'url' => $url, 'url_hash' => $url_hash, 'status' => 'pending'],
-            ['%d', '%s', '%s', '%s']
-        );
+        $wpdb->insert($wpdb->prefix . 'ca_urls', ['source_id' => $source_id, 'url' => $url, 'url_hash' => $url_hash, 'status' => 'pending'], ['%d', '%s', '%s', '%s']);
         return $wpdb->insert_id;
     }
 
@@ -57,12 +52,7 @@ class CA_Queue {
         
         include_once( ABSPATH . WPINC . '/feed.php' );
 
-        // Fake User Agent to bypass 403 Forbidden Cloudflare/Bot blocks
-        add_filter('http_headers_useragent', function() {
-            return 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
-        }, 999);
-        
-        // Also extend HTTP timeout for slow feeds
+        add_filter('http_headers_useragent', function() { return 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'; }, 999);
         add_filter('http_request_timeout', function() { return 30; }, 999);
 
         foreach ($sources as $source) {
@@ -83,8 +73,6 @@ class CA_Queue {
                 }
                 if ($added > 0) {
                     $wpdb->insert($wpdb->prefix . 'ca_logs', ['action' => 'discovery', 'level' => 'SUCCESS', 'message' => "Discovered $added new URLs from source {$source->name}", 'source_id' => $source->id]);
-                } else {
-                    $wpdb->insert($wpdb->prefix . 'ca_logs', ['action' => 'discovery', 'level' => 'INFO', 'message' => "No new unique URLs found in {$source->name}", 'source_id' => $source->id]);
                 }
             }
         }
@@ -94,7 +82,8 @@ class CA_Queue {
         global $wpdb;
         $wpdb->insert($wpdb->prefix . 'ca_logs', ['action' => 'fetch', 'level' => 'INFO', 'message' => "Starting fetch queue..."]);
         
-        $urls = $wpdb->get_results("SELECT * FROM {$wpdb->prefix}ca_urls WHERE status = 'pending' ORDER BY id ASC LIMIT 5");
+        // Pick up pending OR failed fetch retries
+        $urls = $wpdb->get_results("SELECT * FROM {$wpdb->prefix}ca_urls WHERE (status = 'pending' OR status = 'fetch_failed') AND retry_count < 3 ORDER BY id ASC LIMIT 5");
         if (empty($urls)) {
             $wpdb->insert($wpdb->prefix . 'ca_logs', ['action' => 'fetch', 'level' => 'INFO', 'message' => "No pending URLs to fetch."]);
             return;
@@ -110,7 +99,7 @@ class CA_Queue {
             
             if (is_wp_error($response)) {
                 $wpdb->insert($wpdb->prefix . 'ca_logs', ['action' => 'fetch', 'level' => 'ERROR', 'message' => "HTTP Request Failed for {$url_row->url}: " . $response->get_error_message()]);
-                $wpdb->update($wpdb->prefix . 'ca_urls', ['status' => 'failed', 'retry_count' => $url_row->retry_count + 1], ['id' => $url_row->id]);
+                $wpdb->update($wpdb->prefix . 'ca_urls', ['status' => 'fetch_failed', 'retry_count' => $url_row->retry_count + 1], ['id' => $url_row->id]);
                 continue;
             }
             if (wp_remote_retrieve_response_code($response) != 200) {
@@ -129,7 +118,7 @@ class CA_Queue {
             }
             
             $wpdb->update($wpdb->prefix . 'ca_urls', [
-                'status' => 'ready_for_ai', 'content_hash' => $content_hash, 'processed_at' => current_time('mysql')
+                'status' => 'ready_for_ai', 'content_hash' => $content_hash, 'processed_at' => current_time('mysql'), 'retry_count' => 0
             ], ['id' => $url_row->id]);
             
             $wpdb->insert($wpdb->prefix . 'ca_logs', ['action' => 'fetch', 'level' => 'SUCCESS', 'message' => "Successfully fetched and hashed: {$url_row->url}"]);

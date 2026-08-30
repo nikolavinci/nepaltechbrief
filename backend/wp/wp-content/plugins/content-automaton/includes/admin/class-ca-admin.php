@@ -67,8 +67,8 @@ class CA_Admin {
         echo '<h2 class="nav-tab-wrapper" style="border-bottom: 2px solid #e5e7eb;">';
         echo '<a href="?page=content-automaton&tab=dashboard" class="nav-tab ' . ($tab == 'dashboard' ? 'nav-tab-active' : '') . '">Overview & Manual Run</a>';
         echo '<a href="?page=content-automaton&tab=sources" class="nav-tab ' . ($tab == 'sources' ? 'nav-tab-active' : '') . '">News Sources</a>';
-        echo '<a href="?page=content-automaton&tab=drafts" class="nav-tab ' . ($tab == 'drafts' ? 'nav-tab-active' : '') . '">Drafted Articles</a>';
-        echo '<a href="?page=content-automaton&tab=logs" class="nav-tab ' . ($tab == 'logs' ? 'nav-tab-active' : '') . '">System Logs (Errors)</a>';
+        echo '<a href="?page=content-automaton&tab=archive" class="nav-tab ' . ($tab == 'archive' ? 'nav-tab-active' : '') . '">Archive & Drafts</a>';
+        echo '<a href="?page=content-automaton&tab=logs" class="nav-tab ' . ($tab == 'logs' ? 'nav-tab-active' : '') . '">System Logs</a>';
         echo '<a href="?page=content-automaton&tab=settings" class="nav-tab ' . ($tab == 'settings' ? 'nav-tab-active' : '') . '">Engine Settings</a>';
         echo '</h2>';
         
@@ -76,7 +76,7 @@ class CA_Admin {
         
         if ($tab == 'dashboard') $this->render_overview();
         elseif ($tab == 'sources') $this->render_sources();
-        elseif ($tab == 'drafts') $this->render_drafts();
+        elseif ($tab == 'archive') $this->render_archive();
         elseif ($tab == 'logs') $this->render_logs();
         elseif ($tab == 'settings') $this->render_settings();
         
@@ -86,7 +86,7 @@ class CA_Admin {
     private function render_overview() {
         global $wpdb;
         $total_sources = $wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->prefix}ca_sources");
-        $pending_urls = $wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->prefix}ca_urls WHERE status = 'pending'");
+        $pending_urls = $wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->prefix}ca_urls WHERE status IN ('pending', 'fetch_failed', 'ready_for_ai', 'ai_failed') AND retry_count < 3");
         $generated = $wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->prefix}ca_urls WHERE status = 'draft_created'");
         $status = get_option('ca_engine_status', 'running');
         $color = $status == 'running' ? '#10b981' : '#ef4444';
@@ -169,27 +169,32 @@ class CA_Admin {
         echo '</form></div>';
     }
 
-    private function render_drafts() {
+    private function render_archive() {
         global $wpdb;
-        $drafts = $wpdb->get_results("SELECT post_id, url, discovered_at FROM {$wpdb->prefix}ca_urls WHERE status = 'draft_created' ORDER BY id DESC LIMIT 50");
+        $drafts = $wpdb->get_results("SELECT * FROM {$wpdb->prefix}ca_urls ORDER BY id DESC LIMIT 100");
         
-        echo '<h2>AI Generated Drafts</h2>';
+        echo '<h2>URL History & Archive</h2>';
+        echo '<p>This is a complete record of all discovered URLs. The engine permanently remembers these to prevent duplicate articles from ever being generated again.</p>';
         echo '<table class="wp-list-table widefat fixed striped">';
-        echo '<thead><tr><th>WordPress Draft</th><th>Original Source URL</th><th>Discovered Date</th></tr></thead><tbody>';
+        echo '<thead><tr><th>Article URL</th><th>Processing Status</th><th>Retries</th><th>Generated WP Post</th></tr></thead><tbody>';
         
         if (empty($drafts)) {
-            echo '<tr><td colspan="3">No drafts generated yet. Run the queue from the overview tab to generate articles.</td></tr>';
+            echo '<tr><td colspan="4">No articles processed yet.</td></tr>';
         } else {
             foreach($drafts as $d) {
+                $status = strtoupper($d->status);
+                $post_link = '-';
                 if ($d->post_id) {
                     $edit_url = get_edit_post_link($d->post_id);
                     $title = get_the_title($d->post_id);
-                    echo "<tr>
-                        <td><strong><a href='{$edit_url}'>" . esc_html($title ? $title : '(No Title)') . "</a></strong><br><a href='{$edit_url}'>Edit</a></td>
-                        <td><a href='" . esc_url($d->url) . "' target='_blank'>" . esc_html($d->url) . "</a></td>
-                        <td>" . esc_html($d->discovered_at) . "</td>
-                    </tr>";
+                    $post_link = "<a href='{$edit_url}'>Edit " . esc_html($title ? $title : '(No Title)') . "</a>";
                 }
+                echo "<tr>
+                    <td><a href='" . esc_url($d->url) . "' target='_blank'>" . esc_html($d->url) . "</a></td>
+                    <td><strong>{$status}</strong></td>
+                    <td>{$d->retry_count}</td>
+                    <td>{$post_link}</td>
+                </tr>";
             }
         }
         echo '</tbody></table>';
@@ -226,7 +231,6 @@ class CA_Admin {
         echo '<h2>Engine Configuration</h2>';
         echo '<form method="post" style="max-width:800px;">';
         
-        // 1. Core Scheduling
         echo '<h3 style="border-bottom:1px solid #ccc; padding-bottom:10px; margin-top:30px;">1. Execution & Scheduling</h3>';
         echo '<table class="form-table">';
         $status = get_option('ca_engine_status', 'running');
@@ -240,7 +244,6 @@ class CA_Admin {
         echo '<select name="ca_cron_unit"><option value="minutes" ' . selected($cron_unit, 'minutes', false) . '>Minutes</option><option value="hours" ' . selected($cron_unit, 'hours', false) . '>Hours</option><option value="days" ' . selected($cron_unit, 'days', false) . '>Days</option></select></td></tr>';
         echo '</table>';
         
-        // 2. Custom Prompts and Language SEO
         echo '<h3 style="border-bottom:1px solid #ccc; padding-bottom:10px; margin-top:30px;">2. AI Prompt & SEO Languages</h3>';
         echo '<table class="form-table">';
         
@@ -252,30 +255,18 @@ class CA_Admin {
         
         $lang_slug = get_option('ca_lang_slug', 'english');
         echo '<tr><th><label style="font-weight:bold;">Slug Language</label></th><td>';
-        echo '<select name="ca_lang_slug" style="width:100%;">';
-        echo '<option value="english" ' . selected($lang_slug, 'english', false) . '>English (SEO Friendly)</option>';
-        echo '<option value="nepali" ' . selected($lang_slug, 'nepali', false) . '>Nepali (Unicode)</option>';
-        echo '<option value="romanized" ' . selected($lang_slug, 'romanized', false) . '>Romanized Nepali</option>';
-        echo '</select></td></tr>';
+        echo '<select name="ca_lang_slug" style="width:100%;"><option value="english" ' . selected($lang_slug, 'english', false) . '>English (SEO Friendly)</option><option value="nepali" ' . selected($lang_slug, 'nepali', false) . '>Nepali (Unicode)</option><option value="romanized" ' . selected($lang_slug, 'romanized', false) . '>Romanized Nepali</option></select></td></tr>';
         
         $lang_meta = get_option('ca_lang_meta', 'english');
         echo '<tr><th><label style="font-weight:bold;">Meta Description Language</label></th><td>';
-        echo '<select name="ca_lang_meta" style="width:100%;">';
-        echo '<option value="english" ' . selected($lang_meta, 'english', false) . '>English</option>';
-        echo '<option value="nepali" ' . selected($lang_meta, 'nepali', false) . '>Nepali</option>';
-        echo '</select></td></tr>';
+        echo '<select name="ca_lang_meta" style="width:100%;"><option value="english" ' . selected($lang_meta, 'english', false) . '>English</option><option value="nepali" ' . selected($lang_meta, 'nepali', false) . '>Nepali</option></select></td></tr>';
         
         $lang_tags = get_option('ca_lang_tags', 'bilingual');
         echo '<tr><th><label style="font-weight:bold;">Tags & Keywords Language</label></th><td>';
-        echo '<select name="ca_lang_tags" style="width:100%;">';
-        echo '<option value="english" ' . selected($lang_tags, 'english', false) . '>English</option>';
-        echo '<option value="nepali" ' . selected($lang_tags, 'nepali', false) . '>Nepali</option>';
-        echo '<option value="bilingual" ' . selected($lang_tags, 'bilingual', false) . '>Bilingual (Both)</option>';
-        echo '</select></td></tr>';
+        echo '<select name="ca_lang_tags" style="width:100%;"><option value="english" ' . selected($lang_tags, 'english', false) . '>English</option><option value="nepali" ' . selected($lang_tags, 'nepali', false) . '>Nepali</option><option value="bilingual" ' . selected($lang_tags, 'bilingual', false) . '>Bilingual (Both)</option></select></td></tr>';
         
         echo '</table>';
 
-        // 3. API Keys
         echo '<h3 style="border-bottom:1px solid #ccc; padding-bottom:10px; margin-top:30px;">3. Provider API Keys</h3>';
         echo '<table class="form-table">';
         
