@@ -241,7 +241,19 @@ class CA_Admin {
                 if ($d->post_id) {
                     $edit_url = get_edit_post_link($d->post_id);
                     $title = get_the_title($d->post_id);
-                    $post_link = "<a href='{$edit_url}'>Edit " . esc_html($title ? $title : '(No Title)') . "</a>";
+                    
+                    // Live WP Post Status Badge
+                    $wp_status = get_post_status($d->post_id);
+                    $badge_color = '#64748b'; // default grey
+                    if ($wp_status == 'publish') $badge_color = '#10b981'; // green
+                    elseif ($wp_status == 'draft') $badge_color = '#f59e0b'; // orange
+                    
+                    $badge = '';
+                    if ($wp_status) {
+                        $badge = "<span style='background:{$badge_color}; color:#fff; padding:2px 6px; border-radius:4px; font-size:10px; font-weight:bold; margin-left:8px; display:inline-block; vertical-align:middle;'>" . strtoupper($wp_status) . "</span>";
+                    }
+                    
+                    $post_link = "<a href='{$edit_url}' style='vertical-align:middle;'>Edit " . esc_html($title ? $title : '(No Title)') . "</a>" . $badge;
                 }
                 
                 $formatted_date = $this->get_formatted_time($d->discovered_at);

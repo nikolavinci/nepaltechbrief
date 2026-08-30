@@ -3,7 +3,7 @@
  * Plugin Name: Content Automaton
  * Plugin URI: https://nikolavinci.com
  * Description: Enterprise SEO/AEO/GEO/AIO Content Optimization pipeline. Synthesizes multi-source content seamlessly.
- * Version: 3.4.0
+ * Version: 3.4.1
  * Author: nikolavinci
  */
 
@@ -13,7 +13,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 define( 'CA_DIR', plugin_dir_path( __FILE__ ) );
 define( 'CA_URL', plugin_dir_url( __FILE__ ) );
-define( 'CA_VERSION', '3.4.0' );
+define( 'CA_VERSION', '3.4.1' );
 
 require_once CA_DIR . 'includes/db/class-ca-db.php';
 require_once CA_DIR . 'includes/admin/class-ca-admin.php';
