@@ -19,11 +19,21 @@ class CA_Admin {
             update_option('ca_cron_unit', sanitize_text_field($_POST['ca_cron_unit']));
             
             update_option('ca_ai_provider', sanitize_text_field($_POST['ca_ai_provider']));
+            
             update_option('ca_openai_key', sanitize_text_field($_POST['ca_openai_key']));
+            update_option('ca_openai_model', sanitize_text_field($_POST['ca_openai_model']));
+            
             update_option('ca_gemini_key', sanitize_text_field($_POST['ca_gemini_key']));
+            update_option('ca_gemini_model', sanitize_text_field($_POST['ca_gemini_model']));
+            
             update_option('ca_groq_key', sanitize_text_field($_POST['ca_groq_key']));
+            update_option('ca_groq_model', sanitize_text_field($_POST['ca_groq_model']));
+            
             update_option('ca_deepseek_key', sanitize_text_field($_POST['ca_deepseek_key']));
+            update_option('ca_deepseek_model', sanitize_text_field($_POST['ca_deepseek_model']));
+            
             update_option('ca_qwen_key', sanitize_text_field($_POST['ca_qwen_key']));
+            update_option('ca_qwen_model', sanitize_text_field($_POST['ca_qwen_model']));
             
             update_option('ca_unsplash_key', sanitize_text_field($_POST['ca_unsplash_key']));
             update_option('ca_pexels_key', sanitize_text_field($_POST['ca_pexels_key']));
@@ -49,6 +59,7 @@ class CA_Admin {
             echo '<div class="notice notice-success"><p>Settings Saved & Engine Updated!</p></div>';
         }
         
+        // ... (Skipping some unchanged parts like ca_add_source for brevity, actually I should include them to keep the file valid)
         if (isset($_POST['ca_add_source'])) {
             global $wpdb;
             $wpdb->insert($wpdb->prefix . 'ca_sources', [
@@ -282,8 +293,7 @@ class CA_Admin {
         $default_prompt = "Reword this article including the title and write it in Nepali to avoid plagiarism and suggest prompt for AI image generation, slug, tags, category (english) and nepali, meta description.";
         $prompt = get_option('ca_custom_prompt', $default_prompt);
         echo '<tr><th><label style="font-weight:bold;">Custom System Prompt</label></th><td>';
-        echo '<textarea name="ca_custom_prompt" rows="5" style="width:100%;">' . esc_textarea($prompt) . '</textarea>';
-        echo '<p class="description">Provide instructions for how the AI should rewrite the article. (The system will automatically force the AI to return the output in JSON format based on this prompt).</p></td></tr>';
+        echo '<textarea name="ca_custom_prompt" rows="5" style="width:100%;">' . esc_textarea($prompt) . '</textarea></td></tr>';
         
         $lang_slug = get_option('ca_lang_slug', 'english');
         echo '<tr><th><label style="font-weight:bold;">Slug Language</label></th><td>';
@@ -302,43 +312,53 @@ class CA_Admin {
         echo '<h3 style="border-bottom:1px solid #ccc; padding-bottom:10px; margin-top:30px;">3. AI Text Generation Providers</h3>';
         echo '<table class="form-table">';
         
-        $provider = get_option('ca_ai_provider', 'openai');
+        $provider = get_option('ca_ai_provider', 'gemini');
         echo '<tr><th><label style="font-weight:bold;">Active AI Provider</label></th><td>';
         echo '<select name="ca_ai_provider" style="width:100%;">';
-        echo '<option value="openai" ' . selected($provider, 'openai', false) . '>OpenAI (GPT-4o-mini)</option>';
-        echo '<option value="gemini" ' . selected($provider, 'gemini', false) . '>Google Gemini (1.5 Flash)</option>';
-        echo '<option value="groq" ' . selected($provider, 'groq', false) . '>Groq (Llama-3 70B Fast)</option>';
-        echo '<option value="deepseek" ' . selected($provider, 'deepseek', false) . '>DeepSeek (DeepSeek-Chat)</option>';
-        echo '<option value="qwen" ' . selected($provider, 'qwen', false) . '>Alibaba Qwen (Qwen-Turbo)</option>';
+        echo '<option value="openai" ' . selected($provider, 'openai', false) . '>OpenAI</option>';
+        echo '<option value="gemini" ' . selected($provider, 'gemini', false) . '>Google Gemini</option>';
+        echo '<option value="groq" ' . selected($provider, 'groq', false) . '>Groq (Fast Open-Source)</option>';
+        echo '<option value="deepseek" ' . selected($provider, 'deepseek', false) . '>DeepSeek</option>';
+        echo '<option value="qwen" ' . selected($provider, 'qwen', false) . '>Alibaba Qwen</option>';
         echo '</select></td></tr>';
         
-        echo '<tr><th><label style="font-weight:bold;">OpenAI API Key</label></th><td>';
-        echo '<input type="password" name="ca_openai_key" value="' . esc_attr(get_option('ca_openai_key')) . '" style="width:100%;"><p class="description"><a href="https://platform.openai.com/api-keys" target="_blank">Get OpenAI API Key</a></p></td></tr>';
+        // Gemini
+        echo '<tr><th><label style="font-weight:bold;">Gemini Model & API Key</label></th><td>';
+        echo '<input type="text" name="ca_gemini_model" value="' . esc_attr(get_option('ca_gemini_model', 'gemini-2.5-flash')) . '" style="width:30%; margin-right:2%;" placeholder="e.g. gemini-2.5-flash">';
+        echo '<input type="password" name="ca_gemini_key" value="' . esc_attr(get_option('ca_gemini_key')) . '" style="width:68%;" placeholder="Gemini API Key"></td></tr>';
         
-        echo '<tr><th><label style="font-weight:bold;">Google Gemini API Key</label></th><td>';
-        echo '<input type="password" name="ca_gemini_key" value="' . esc_attr(get_option('ca_gemini_key')) . '" style="width:100%;"><p class="description"><a href="https://aistudio.google.com/app/apikey" target="_blank">Get Google Gemini API Key</a></p></td></tr>';
+        // OpenAI
+        echo '<tr><th><label style="font-weight:bold;">OpenAI Model & API Key</label></th><td>';
+        echo '<input type="text" name="ca_openai_model" value="' . esc_attr(get_option('ca_openai_model', 'gpt-4o-mini')) . '" style="width:30%; margin-right:2%;" placeholder="e.g. gpt-4o-mini">';
+        echo '<input type="password" name="ca_openai_key" value="' . esc_attr(get_option('ca_openai_key')) . '" style="width:68%;" placeholder="OpenAI API Key"></td></tr>';
         
-        echo '<tr><th><label style="font-weight:bold;">Groq API Key</label></th><td>';
-        echo '<input type="password" name="ca_groq_key" value="' . esc_attr(get_option('ca_groq_key')) . '" style="width:100%;"><p class="description"><a href="https://console.groq.com/keys" target="_blank">Get Groq API Key (Llama 3)</a></p></td></tr>';
+        // Groq
+        echo '<tr><th><label style="font-weight:bold;">Groq Model & API Key</label></th><td>';
+        echo '<input type="text" name="ca_groq_model" value="' . esc_attr(get_option('ca_groq_model', 'llama3-70b-8192')) . '" style="width:30%; margin-right:2%;" placeholder="e.g. llama3-70b-8192">';
+        echo '<input type="password" name="ca_groq_key" value="' . esc_attr(get_option('ca_groq_key')) . '" style="width:68%;" placeholder="Groq API Key"></td></tr>';
         
-        echo '<tr><th><label style="font-weight:bold;">DeepSeek API Key</label></th><td>';
-        echo '<input type="password" name="ca_deepseek_key" value="' . esc_attr(get_option('ca_deepseek_key')) . '" style="width:100%;"><p class="description"><a href="https://platform.deepseek.com/api_keys" target="_blank">Get DeepSeek API Key</a></p></td></tr>';
+        // DeepSeek
+        echo '<tr><th><label style="font-weight:bold;">DeepSeek Model & API Key</label></th><td>';
+        echo '<input type="text" name="ca_deepseek_model" value="' . esc_attr(get_option('ca_deepseek_model', 'deepseek-chat')) . '" style="width:30%; margin-right:2%;" placeholder="e.g. deepseek-chat">';
+        echo '<input type="password" name="ca_deepseek_key" value="' . esc_attr(get_option('ca_deepseek_key')) . '" style="width:68%;" placeholder="DeepSeek API Key"></td></tr>';
         
-        echo '<tr><th><label style="font-weight:bold;">Alibaba Qwen API Key</label></th><td>';
-        echo '<input type="password" name="ca_qwen_key" value="' . esc_attr(get_option('ca_qwen_key')) . '" style="width:100%;"><p class="description"><a href="https://dashscope.console.aliyun.com/apiKey" target="_blank">Get DashScope (Qwen) API Key</a></p></td></tr>';
+        // Qwen
+        echo '<tr><th><label style="font-weight:bold;">Qwen Model & API Key</label></th><td>';
+        echo '<input type="text" name="ca_qwen_model" value="' . esc_attr(get_option('ca_qwen_model', 'qwen-turbo')) . '" style="width:30%; margin-right:2%;" placeholder="e.g. qwen-turbo">';
+        echo '<input type="password" name="ca_qwen_key" value="' . esc_attr(get_option('ca_qwen_key')) . '" style="width:68%;" placeholder="Qwen API Key"></td></tr>';
         
         echo '</table>';
 
         echo '<h3 style="border-bottom:1px solid #ccc; padding-bottom:10px; margin-top:30px;">4. Image Generation API Keys</h3>';
         echo '<table class="form-table">';
         echo '<tr><th><label style="font-weight:bold;">Unsplash API Key</label></th><td>';
-        echo '<input type="password" name="ca_unsplash_key" value="' . esc_attr(get_option('ca_unsplash_key')) . '" style="width:100%;"><p class="description"><a href="https://unsplash.com/developers" target="_blank">Get Unsplash API Key</a></p></td></tr>';
+        echo '<input type="password" name="ca_unsplash_key" value="' . esc_attr(get_option('ca_unsplash_key')) . '" style="width:100%;"></td></tr>';
         
         echo '<tr><th><label style="font-weight:bold;">Pexels API Key</label></th><td>';
-        echo '<input type="password" name="ca_pexels_key" value="' . esc_attr(get_option('ca_pexels_key')) . '" style="width:100%;"><p class="description"><a href="https://www.pexels.com/api/" target="_blank">Get Pexels API Key</a></p></td></tr>';
+        echo '<input type="password" name="ca_pexels_key" value="' . esc_attr(get_option('ca_pexels_key')) . '" style="width:100%;"></td></tr>';
         
         echo '<tr><th><label style="font-weight:bold;">Pixabay API Key</label></th><td>';
-        echo '<input type="password" name="ca_pixabay_key" value="' . esc_attr(get_option('ca_pixabay_key')) . '" style="width:100%;"><p class="description"><a href="https://pixabay.com/api/docs/" target="_blank">Get Pixabay API Key</a></p></td></tr>';
+        echo '<input type="password" name="ca_pixabay_key" value="' . esc_attr(get_option('ca_pixabay_key')) . '" style="width:100%;"></td></tr>';
         
         echo '</table>';
         

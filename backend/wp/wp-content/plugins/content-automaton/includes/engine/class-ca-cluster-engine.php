@@ -10,7 +10,6 @@ class CA_Cluster_Engine {
         global $wpdb;
         $wpdb->insert($wpdb->prefix . 'ca_logs', ['action' => 'clustering', 'level' => 'INFO', 'message' => "Starting AI clustering queue..."]);
         
-        // Pick up anything ready for clustering, plus legacy ready_for_ai, plus ai_failed that don't have a cluster yet
         $urls = $wpdb->get_results("SELECT * FROM {$wpdb->prefix}ca_urls WHERE status IN ('ready_for_clustering', 'ready_for_ai') OR (status = 'ai_failed' AND (cluster_id IS NULL OR cluster_id = 0)) LIMIT 20");
         
         if (empty($urls)) {
@@ -61,7 +60,7 @@ class CA_Cluster_Engine {
     }
     
     private function call_provider($prompt) {
-        $provider = get_option('ca_ai_provider', 'openai');
+        $provider = get_option('ca_ai_provider', 'gemini');
         
         if (in_array($provider, ['openai', 'groq', 'deepseek', 'qwen'])) {
             $key_map = [
@@ -76,11 +75,11 @@ class CA_Cluster_Engine {
                 'deepseek' => 'https://api.deepseek.com/chat/completions',
                 'qwen' => 'https://dashscope-intl.aliyuncs.com/compatible-mode/v1/chat/completions'
             ];
-            $model_map = [
-                'openai' => 'gpt-4o-mini',
-                'groq' => 'llama3-70b-8192',
-                'deepseek' => 'deepseek-chat',
-                'qwen' => 'qwen-turbo'
+            $model_map_option = [
+                'openai' => 'ca_openai_model',
+                'groq' => 'ca_groq_model',
+                'deepseek' => 'ca_deepseek_model',
+                'qwen' => 'ca_qwen_model'
             ];
             
             $key = get_option($key_map[$provider]);
@@ -90,7 +89,15 @@ class CA_Cluster_Engine {
             }
             
             $url = $url_map[$provider];
-            $model = $model_map[$provider];
+            
+            // Get custom model name, fallback to defaults if somehow empty
+            $model = get_option($model_map_option[$provider]);
+            if (empty($model)) {
+                if ($provider == 'openai') $model = 'gpt-4o-mini';
+                if ($provider == 'groq') $model = 'llama3-70b-8192';
+                if ($provider == 'deepseek') $model = 'deepseek-chat';
+                if ($provider == 'qwen') $model = 'qwen-turbo';
+            }
             
             $payload = ['model' => $model, 'messages' => [['role' => 'user', 'content' => $prompt]], 'temperature' => 0.2];
             
@@ -133,7 +140,12 @@ class CA_Cluster_Engine {
                 return false;
             }
             
-            $response = wp_remote_post('https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=' . $key, [
+            $model = get_option('ca_gemini_model', 'gemini-1.5-flash');
+            if (empty($model)) $model = 'gemini-1.5-flash';
+            
+            $url = "https://generativelanguage.googleapis.com/v1beta/models/{$model}:generateContent?key={$key}";
+            
+            $response = wp_remote_post($url, [
                 'headers' => ['Content-Type' => 'application/json'],
                 'body' => json_encode(['contents' => [['parts' => [['text' => $prompt]]]]]),
                 'timeout' => 45
