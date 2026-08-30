@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 /**
  * Plugin Name: Content Automaton
  * Plugin URI: https://nikolavinci.com
