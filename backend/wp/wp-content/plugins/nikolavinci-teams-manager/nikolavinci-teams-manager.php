@@ -1,8 +1,8 @@
-﻿<?php
+<?php
 /*
 Plugin Name: NepTechBrief Teams & Entity Manager
 Description: Advanced Entity Home & Teams Manager. Creates dedicated Person entities with comprehensive Schema.org JSON-LD support for AEO, GEO, and AI search optimization.
-Version: 3.0.0
+Version: 3.0.1
 Author: NikolaVinci
 */
 
@@ -241,13 +241,13 @@ class NepTech_Entity_Manager {
                 var max = 7;
                 var b = "";
                 
-                if($('input[name="first_name"]').val()) { score++; b+="<li>✅ Identity</li>"; } else { b+="<li>❌ Identity</li>"; }
-                if($('#profile_picture').val()) { score++; b+="<li>✅ Picture</li>"; } else { b+="<li>❌ Picture</li>"; }
-                if($('textarea[name="short_bio"]').val()) { score++; b+="<li>✅ Bio</li>"; } else { b+="<li>❌ Bio</li>"; }
-                if($('select[name="designation"]').val()) { score++; b+="<li>✅ Role</li>"; } else { b+="<li>❌ Role</li>"; }
-                if($('input[name="expertise"]').val()) { score++; b+="<li>✅ Expertise</li>"; } else { b+="<li>❌ Expertise</li>"; }
-                if($('#sameas-container .repeater-row').length > 0) { score++; b+="<li>✅ sameAs Links</li>"; } else { b+="<li>❌ sameAs Links</li>"; }
-                if($('#education-container .repeater-row').length > 0) { score++; b+="<li>✅ Education</li>"; } else { b+="<li>❌ Education</li>"; }
+                if($('input[name="first_name"]').val()) { score++; b+="<li>âœ… Identity</li>"; } else { b+="<li>âŒ Identity</li>"; }
+                if($('#profile_picture').val()) { score++; b+="<li>âœ… Picture</li>"; } else { b+="<li>âŒ Picture</li>"; }
+                if($('textarea[name="short_bio"]').val()) { score++; b+="<li>âœ… Bio</li>"; } else { b+="<li>âŒ Bio</li>"; }
+                if($('select[name="designation"]').val()) { score++; b+="<li>âœ… Role</li>"; } else { b+="<li>âŒ Role</li>"; }
+                if($('input[name="expertise"]').val()) { score++; b+="<li>âœ… Expertise</li>"; } else { b+="<li>âŒ Expertise</li>"; }
+                if($('#sameas-container .repeater-row').length > 0) { score++; b+="<li>âœ… sameAs Links</li>"; } else { b+="<li>âŒ sameAs Links</li>"; }
+                if($('#education-container .repeater-row').length > 0) { score++; b+="<li>âœ… Education</li>"; } else { b+="<li>âŒ Education</li>"; }
 
                 var pct = Math.round((score/max)*100);
                 $('#score-number').text(pct + '%');
