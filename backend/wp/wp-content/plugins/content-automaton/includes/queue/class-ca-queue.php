@@ -57,6 +57,14 @@ class CA_Queue {
         
         include_once( ABSPATH . WPINC . '/feed.php' );
 
+        // Fake User Agent to bypass 403 Forbidden Cloudflare/Bot blocks
+        add_filter('http_headers_useragent', function() {
+            return 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
+        }, 999);
+        
+        // Also extend HTTP timeout for slow feeds
+        add_filter('http_request_timeout', function() { return 30; }, 999);
+
         foreach ($sources as $source) {
             if ($source->type == 'rss') {
                 $rss = fetch_feed( $source->url );
@@ -94,7 +102,11 @@ class CA_Queue {
         
         foreach ($urls as $url_row) {
             $wpdb->update($wpdb->prefix . 'ca_urls', ['status' => 'processing'], ['id' => $url_row->id]);
-            $response = wp_remote_get($url_row->url, ['timeout' => 15]);
+            $response = wp_remote_get($url_row->url, [
+                'timeout' => 30,
+                'user-agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                'sslverify' => false
+            ]);
             
             if (is_wp_error($response)) {
                 $wpdb->insert($wpdb->prefix . 'ca_logs', ['action' => 'fetch', 'level' => 'ERROR', 'message' => "HTTP Request Failed for {$url_row->url}: " . $response->get_error_message()]);
