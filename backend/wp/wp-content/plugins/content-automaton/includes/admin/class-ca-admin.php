@@ -68,6 +68,7 @@ class CA_Admin {
         echo '<h1 style="margin-bottom:20px; font-weight:800; color:#2563eb;">AI Content Automaton</h1>';
         echo '<h2 class="nav-tab-wrapper" style="border-bottom: 2px solid #e5e7eb;">';
         echo '<a href="?page=content-automaton&tab=dashboard" class="nav-tab ' . ($tab == 'dashboard' ? 'nav-tab-active' : '') . '">Overview & Manual Run</a>';
+        echo '<a href="?page=content-automaton&tab=usage" class="nav-tab ' . ($tab == 'usage' ? 'nav-tab-active' : '') . '">API Cost & Usage</a>';
         echo '<a href="?page=content-automaton&tab=sources" class="nav-tab ' . ($tab == 'sources' ? 'nav-tab-active' : '') . '">News Sources</a>';
         echo '<a href="?page=content-automaton&tab=archive" class="nav-tab ' . ($tab == 'archive' ? 'nav-tab-active' : '') . '">Archive & Drafts</a>';
         echo '<a href="?page=content-automaton&tab=logs" class="nav-tab ' . ($tab == 'logs' ? 'nav-tab-active' : '') . '">System Logs</a>';
@@ -77,6 +78,7 @@ class CA_Admin {
         echo '<div style="background:#fff; padding:30px; border:1px solid #e5e7eb; border-top:none; border-radius: 0 0 8px 8px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">';
         
         if ($tab == 'dashboard') $this->render_overview();
+        elseif ($tab == 'usage') $this->render_usage();
         elseif ($tab == 'sources') $this->render_sources();
         elseif ($tab == 'archive') $this->render_archive();
         elseif ($tab == 'logs') $this->render_logs();
@@ -120,6 +122,30 @@ class CA_Admin {
         });
         </script>
         <?php
+    }
+    
+    private function render_usage() {
+        $total_tokens = get_option('ca_total_tokens', 0);
+        $total_cost = get_option('ca_total_cost', 0);
+        
+        echo '<h2>API Cost & Usage Dashboard</h2>';
+        echo '<p>Track your AI API expenses automatically. Estimates are based on GPT-4o-mini and Gemini 1.5 Flash standard pricing.</p>';
+        
+        echo '<div style="display:grid; grid-template-columns: repeat(2, 1fr); gap:20px; max-width:600px; margin-top:30px;">';
+        $this->stat_card("Total Tokens Consumed", number_format($total_tokens), "#3b82f6");
+        $this->stat_card("Total Est. Cost", "$" . number_format($total_cost, 4), "#10b981");
+        echo '</div>';
+        
+        echo '<form method="post" style="margin-top:40px;">';
+        echo '<input type="hidden" name="ca_reset_usage" value="1">';
+        echo '<button type="submit" class="button button-secondary" onclick="return confirm(\'Reset usage stats?\');">Reset Statistics to Zero</button>';
+        echo '</form>';
+        
+        if (isset($_POST['ca_reset_usage'])) {
+            update_option('ca_total_tokens', 0);
+            update_option('ca_total_cost', 0);
+            echo '<script>window.location.href="?page=content-automaton&tab=usage";</script>';
+        }
     }
     
     private function stat_card($title, $value, $color) {

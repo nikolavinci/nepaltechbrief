@@ -13,7 +13,6 @@ class CA_AI_Engine {
         global $wpdb;
         $wpdb->insert($wpdb->prefix . 'ca_logs', ['action' => 'generation', 'level' => 'INFO', 'message' => "Starting AI generation queue..."]);
         
-        // Grab unique cluster IDs that have clustered or ai_failed status
         $cluster_query = "SELECT DISTINCT cluster_id FROM {$wpdb->prefix}ca_urls WHERE (status = 'clustered' OR status = 'ai_failed') AND retry_count < 3 LIMIT 2";
         $cluster_ids = $wpdb->get_col($cluster_query);
         
@@ -22,7 +21,6 @@ class CA_AI_Engine {
             return;
         }
         
-        // Get internal links for SEO context
         $recent_posts = get_posts(['numberposts' => 10, 'post_status' => 'publish']);
         $internal_links_context = "";
         foreach ($recent_posts as $rp) {
@@ -35,7 +33,6 @@ class CA_AI_Engine {
             
             $source = $wpdb->get_row($wpdb->prepare("SELECT * FROM {$wpdb->prefix}ca_sources WHERE id = %d", $urls[0]->source_id));
             
-            // Mark all as generating
             foreach ($urls as $u) {
                 $wpdb->update($wpdb->prefix . 'ca_urls', ['status' => 'generating'], ['id' => $u->id]);
             }
@@ -113,7 +110,7 @@ class CA_AI_Engine {
             
             $post_data = [
                 'post_title' => sanitize_text_field($data['title']),
-                'post_content' => wp_kses_post($data['content']), // wp_kses_post allows <a> tags
+                'post_content' => wp_kses_post($data['content']),
                 'post_status' => $post_status,
                 'post_author' => 1,
                 'tags_input' => sanitize_text_field($tags_input)
@@ -130,7 +127,6 @@ class CA_AI_Engine {
                 if (!empty($data['category_en'])) update_post_meta($post_id, '_ai_category_en', sanitize_text_field($data['category_en']));
                 if (!empty($data['category_ne'])) update_post_meta($post_id, '_ai_category_ne', sanitize_text_field($data['category_ne']));
                 
-                // Track all clustered URLs that mapped to this post
                 $original_urls = [];
                 foreach ($urls as $u) {
                     $original_urls[] = $u->url;
@@ -161,7 +157,7 @@ class CA_AI_Engine {
             $response = wp_remote_post('https://api.openai.com/v1/chat/completions', [
                 'headers' => ['Authorization' => 'Bearer ' . $key, 'Content-Type' => 'application/json'],
                 'body' => json_encode(['model' => 'gpt-4o-mini', 'messages' => [['role' => 'user', 'content' => $prompt]], 'temperature' => 0.7, 'response_format' => ['type' => 'json_object']]),
-                'timeout' => 90 // Increased timeout due to synthesis complexity
+                'timeout' => 90
             ]);
             
             if (is_wp_error($response)) {
@@ -173,6 +169,10 @@ class CA_AI_Engine {
             if (isset($body['error'])) {
                 $this->log_error("OpenAI API Error: " . $body['error']['message']);
                 return false;
+            }
+            
+            if (isset($body['usage'])) {
+                $this->track_usage('openai', $body['usage']['prompt_tokens'], $body['usage']['completion_tokens']);
             }
             
             return $body['choices'][0]['message']['content'] ?? false;
@@ -201,9 +201,28 @@ class CA_AI_Engine {
                 return false;
             }
             
+            if (isset($body['usageMetadata'])) {
+                $this->track_usage('gemini', $body['usageMetadata']['promptTokenCount'], $body['usageMetadata']['candidatesTokenCount']);
+            }
+            
             return $body['candidates'][0]['content']['parts'][0]['text'] ?? false;
         }
         return false;
+    }
+    
+    private function track_usage($provider, $prompt_tokens, $completion_tokens) {
+        $cost = 0;
+        if ($provider == 'openai') {
+            $cost = ($prompt_tokens / 1000000 * 0.150) + ($completion_tokens / 1000000 * 0.600);
+        } elseif ($provider == 'gemini') {
+            $cost = ($prompt_tokens / 1000000 * 0.075) + ($completion_tokens / 1000000 * 0.300);
+        }
+        
+        $total_tokens = get_option('ca_total_tokens', 0) + $prompt_tokens + $completion_tokens;
+        $total_cost = get_option('ca_total_cost', 0) + $cost;
+        
+        update_option('ca_total_tokens', $total_tokens);
+        update_option('ca_total_cost', $total_cost);
     }
     
     private function log_error($message) {

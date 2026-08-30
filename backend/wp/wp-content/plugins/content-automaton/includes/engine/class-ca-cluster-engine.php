@@ -70,6 +70,12 @@ class CA_Cluster_Engine {
             
             if (is_wp_error($response)) return false;
             $body = json_decode(wp_remote_retrieve_body($response), true);
+            
+            // Track tokens
+            if (isset($body['usage'])) {
+                $this->track_usage('openai', $body['usage']['prompt_tokens'], $body['usage']['completion_tokens']);
+            }
+            
             return $body['choices'][0]['message']['content'] ?? false;
             
         } elseif ($provider == 'gemini') {
@@ -85,6 +91,10 @@ class CA_Cluster_Engine {
             if (is_wp_error($response)) return false;
             $body = json_decode(wp_remote_retrieve_body($response), true);
             
+            if (isset($body['usageMetadata'])) {
+                $this->track_usage('gemini', $body['usageMetadata']['promptTokenCount'], $body['usageMetadata']['candidatesTokenCount']);
+            }
+            
             $text = $body['candidates'][0]['content']['parts'][0]['text'] ?? false;
             if ($text) {
                 $text = preg_replace('/```json\s*/', '', $text);
@@ -94,5 +104,20 @@ class CA_Cluster_Engine {
             return false;
         }
         return false;
+    }
+    
+    private function track_usage($provider, $prompt_tokens, $completion_tokens) {
+        $cost = 0;
+        if ($provider == 'openai') {
+            $cost = ($prompt_tokens / 1000000 * 0.150) + ($completion_tokens / 1000000 * 0.600);
+        } elseif ($provider == 'gemini') {
+            $cost = ($prompt_tokens / 1000000 * 0.075) + ($completion_tokens / 1000000 * 0.300);
+        }
+        
+        $total_tokens = get_option('ca_total_tokens', 0) + $prompt_tokens + $completion_tokens;
+        $total_cost = get_option('ca_total_cost', 0) + $cost;
+        
+        update_option('ca_total_tokens', $total_tokens);
+        update_option('ca_total_cost', $total_cost);
     }
 }
