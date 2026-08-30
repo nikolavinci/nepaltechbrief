@@ -13,56 +13,89 @@ class CA_AI_Engine {
         global $wpdb;
         $wpdb->insert($wpdb->prefix . 'ca_logs', ['action' => 'generation', 'level' => 'INFO', 'message' => "Starting AI generation queue..."]);
         
-        // Pick up both ready_for_ai and ai_failed (if retries < 3)
-        $urls = $wpdb->get_results("SELECT * FROM {$wpdb->prefix}ca_urls WHERE (status = 'ready_for_ai' OR status = 'ai_failed') AND retry_count < 3 LIMIT 3");
-        if (empty($urls)) {
-            $wpdb->insert($wpdb->prefix . 'ca_logs', ['action' => 'generation', 'level' => 'INFO', 'message' => "No articles ready for AI generation."]);
+        // Grab unique cluster IDs that have clustered or ai_failed status
+        $cluster_query = "SELECT DISTINCT cluster_id FROM {$wpdb->prefix}ca_urls WHERE (status = 'clustered' OR status = 'ai_failed') AND retry_count < 3 LIMIT 2";
+        $cluster_ids = $wpdb->get_col($cluster_query);
+        
+        if (empty($cluster_ids)) {
+            $wpdb->insert($wpdb->prefix . 'ca_logs', ['action' => 'generation', 'level' => 'INFO', 'message' => "No clusters ready for AI generation."]);
             return;
         }
         
-        foreach ($urls as $url_row) {
-            $wpdb->update($wpdb->prefix . 'ca_urls', ['status' => 'generating'], ['id' => $url_row->id]);
+        // Get internal links for SEO context
+        $recent_posts = get_posts(['numberposts' => 10, 'post_status' => 'publish']);
+        $internal_links_context = "";
+        foreach ($recent_posts as $rp) {
+            $internal_links_context .= "- " . esc_html($rp->post_title) . " (URL: " . get_permalink($rp->ID) . ")\n";
+        }
+        
+        foreach ($cluster_ids as $cluster_id) {
+            $urls = $wpdb->get_results($wpdb->prepare("SELECT * FROM {$wpdb->prefix}ca_urls WHERE cluster_id = %d", $cluster_id));
+            if (empty($urls)) continue;
             
-            $source = $wpdb->get_row($wpdb->prepare("SELECT * FROM {$wpdb->prefix}ca_sources WHERE id = %d", $url_row->source_id));
-            if (!$source) continue;
+            $source = $wpdb->get_row($wpdb->prepare("SELECT * FROM {$wpdb->prefix}ca_sources WHERE id = %d", $urls[0]->source_id));
             
-            $response = wp_remote_get($url_row->url, [
-                'timeout' => 30,
-                'user-agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-                'sslverify' => false
-            ]);
+            // Mark all as generating
+            foreach ($urls as $u) {
+                $wpdb->update($wpdb->prefix . 'ca_urls', ['status' => 'generating'], ['id' => $u->id]);
+            }
             
-            if (is_wp_error($response) || wp_remote_retrieve_response_code($response) != 200) {
-                $err = is_wp_error($response) ? $response->get_error_message() : wp_remote_retrieve_response_code($response);
-                $this->log_error("Failed to fetch article body for {$url_row->url} (Error/Code: {$err})");
-                $wpdb->update($wpdb->prefix . 'ca_urls', ['status' => 'fetch_failed', 'retry_count' => $url_row->retry_count + 1], ['id' => $url_row->id]);
+            $combined_text = "";
+            $fetch_failed = false;
+            foreach ($urls as $i => $u) {
+                $response = wp_remote_get($u->url, [
+                    'timeout' => 30,
+                    'user-agent' => 'Mozilla/5.0',
+                    'sslverify' => false
+                ]);
+                
+                if (is_wp_error($response) || wp_remote_retrieve_response_code($response) != 200) {
+                    $fetch_failed = true;
+                    break;
+                }
+                
+                $body = wp_remote_retrieve_body($response);
+                $clean_text = wp_strip_all_tags($body);
+                $clean_text = substr($clean_text, 0, 8000);
+                $combined_text .= "--- SOURCE " . ($i+1) . " ---\n" . $clean_text . "\n\n";
+            }
+            
+            if ($fetch_failed) {
+                foreach ($urls as $u) {
+                    $wpdb->update($wpdb->prefix . 'ca_urls', ['status' => 'fetch_failed', 'retry_count' => $u->retry_count + 1], ['id' => $u->id]);
+                }
                 continue;
             }
             
-            $body = wp_remote_retrieve_body($response);
-            $clean_text = wp_strip_all_tags($body);
-            $clean_text = substr($clean_text, 0, 8000);
-            
             $base_prompt = get_option('ca_custom_prompt', 'Reword this article including the title and write it in Nepali to avoid plagiarism and suggest prompt for AI image generation, slug, tags, category (english) and nepali, meta description.');
+            
+            $synthesis_rules = "CRITICAL INSTRUCTIONS:\n";
+            $synthesis_rules .= "1. SYNTHESIS: You have been provided multiple sources for the exact same event. Synthesize them into ONE comprehensive original article.\n";
+            $synthesis_rules .= "2. STRIP COMPETITORS: Do not mention the original source publishers, authors, or brands (e.g. 'According to TechPana', 'OnlineKhabar reports').\n";
+            $synthesis_rules .= "3. NO EXTERNAL LINKS: Strip any external HTML links from the content.\n";
+            $synthesis_rules .= "4. INTERNAL SEO LINKS: Naturally insert 2 to 3 HTML links inside the text pointing to these related articles from our site. Make the anchor text natural:\n" . $internal_links_context . "\n";
+            
             $lang_slug = get_option('ca_lang_slug', 'english');
             $lang_meta = get_option('ca_lang_meta', 'english');
+            $json_schema = '{"title": "Nepali Title", "content": "HTML formatted content (p, h2, a)", "image_prompt": "English prompt for image generation", "slug": "URL slug in ' . $lang_slug . '", "tags_en": "comma, separated, english, tags", "tags_ne": "comma, separated, nepali, tags", "category_en": "category", "category_ne": "category", "meta_desc": "160 char SEO description in ' . $lang_meta . '", "focus_keyword": "main focus keyword"}';
             
-            $json_schema = '{"title": "Nepali Title", "content": "HTML formatted content (p, h2)", "image_prompt": "English prompt for image generation", "slug": "URL slug in ' . $lang_slug . '", "tags_en": "comma, separated, english, tags", "tags_ne": "comma, separated, nepali, tags", "category_en": "category", "category_ne": "category", "meta_desc": "160 char SEO description in ' . $lang_meta . '", "focus_keyword": "main focus keyword"}';
-            
-            $prompt = $base_prompt . "\n\nReturn ONLY a valid JSON object matching this exact structure: " . $json_schema . "\n\nArticle Text:\n" . $clean_text;
+            $prompt = $base_prompt . "\n\n" . $synthesis_rules . "\nReturn ONLY a valid JSON object matching this exact structure: " . $json_schema . "\n\nTEXT SOURCES:\n" . $combined_text;
             
             $ai_response = $this->call_provider($prompt);
             
             if (!$ai_response) {
-                // Keep it in AI queue for next run, increment retry
-                $wpdb->update($wpdb->prefix . 'ca_urls', ['status' => 'ai_failed', 'retry_count' => $url_row->retry_count + 1], ['id' => $url_row->id]);
+                foreach ($urls as $u) {
+                    $wpdb->update($wpdb->prefix . 'ca_urls', ['status' => 'ai_failed', 'retry_count' => $u->retry_count + 1], ['id' => $u->id]);
+                }
                 continue;
             }
             
             $data = json_decode($ai_response, true);
             if (!$data || !isset($data['title']) || !isset($data['content'])) {
-                $this->log_error("AI returned invalid JSON format for {$url_row->url}");
-                $wpdb->update($wpdb->prefix . 'ca_urls', ['status' => 'ai_failed', 'retry_count' => $url_row->retry_count + 1], ['id' => $url_row->id]);
+                $this->log_error("AI returned invalid JSON format for cluster {$cluster_id}");
+                foreach ($urls as $u) {
+                    $wpdb->update($wpdb->prefix . 'ca_urls', ['status' => 'ai_failed', 'retry_count' => $u->retry_count + 1], ['id' => $u->id]);
+                }
                 continue;
             }
             
@@ -76,20 +109,17 @@ class CA_AI_Engine {
             }
             $tags_input = implode(',', $final_tags);
             
-            $post_status = $source->auto_publish ? 'publish' : 'draft';
+            $post_status = ($source && $source->auto_publish) ? 'publish' : 'draft';
             
             $post_data = [
                 'post_title' => sanitize_text_field($data['title']),
-                'post_content' => wp_kses_post($data['content']),
+                'post_content' => wp_kses_post($data['content']), // wp_kses_post allows <a> tags
                 'post_status' => $post_status,
                 'post_author' => 1,
-                'post_category' => [$source->default_category],
                 'tags_input' => sanitize_text_field($tags_input)
             ];
-            
-            if (!empty($data['slug'])) {
-                $post_data['post_name'] = sanitize_title($data['slug']);
-            }
+            if ($source) $post_data['post_category'] = [$source->default_category];
+            if (!empty($data['slug'])) $post_data['post_name'] = sanitize_title($data['slug']);
             
             $post_id = wp_insert_post($post_data);
             
@@ -100,13 +130,20 @@ class CA_AI_Engine {
                 if (!empty($data['category_en'])) update_post_meta($post_id, '_ai_category_en', sanitize_text_field($data['category_en']));
                 if (!empty($data['category_ne'])) update_post_meta($post_id, '_ai_category_ne', sanitize_text_field($data['category_ne']));
                 
-                update_post_meta($post_id, 'ca_original_url', $url_row->url);
-                $wpdb->update($wpdb->prefix . 'ca_urls', ['status' => 'draft_created', 'post_id' => $post_id], ['id' => $url_row->id]);
+                // Track all clustered URLs that mapped to this post
+                $original_urls = [];
+                foreach ($urls as $u) {
+                    $original_urls[] = $u->url;
+                    $wpdb->update($wpdb->prefix . 'ca_urls', ['status' => 'draft_created', 'post_id' => $post_id], ['id' => $u->id]);
+                }
+                update_post_meta($post_id, 'ca_original_url', implode("\n", $original_urls));
                 
-                $this->log_success("Successfully generated & archived: " . $data['title']);
+                $this->log_success("Successfully synthesized cluster {$cluster_id} (" . count($urls) . " sources) into article: " . $data['title']);
             } else {
-                $this->log_error("Failed to insert post into WordPress DB for {$url_row->url}");
-                $wpdb->update($wpdb->prefix . 'ca_urls', ['status' => 'wp_failed', 'retry_count' => $url_row->retry_count + 1], ['id' => $url_row->id]);
+                $this->log_error("Failed to insert synthesized post into DB for cluster {$cluster_id}");
+                foreach ($urls as $u) {
+                    $wpdb->update($wpdb->prefix . 'ca_urls', ['status' => 'wp_failed', 'retry_count' => $u->retry_count + 1], ['id' => $u->id]);
+                }
             }
         }
     }
@@ -124,7 +161,7 @@ class CA_AI_Engine {
             $response = wp_remote_post('https://api.openai.com/v1/chat/completions', [
                 'headers' => ['Authorization' => 'Bearer ' . $key, 'Content-Type' => 'application/json'],
                 'body' => json_encode(['model' => 'gpt-4o-mini', 'messages' => [['role' => 'user', 'content' => $prompt]], 'temperature' => 0.7, 'response_format' => ['type' => 'json_object']]),
-                'timeout' => 60
+                'timeout' => 90 // Increased timeout due to synthesis complexity
             ]);
             
             if (is_wp_error($response)) {
@@ -150,7 +187,7 @@ class CA_AI_Engine {
             $response = wp_remote_post('https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=' . $key, [
                 'headers' => ['Content-Type' => 'application/json'],
                 'body' => json_encode(['contents' => [['parts' => [['text' => $prompt]]]], 'generationConfig' => ['responseMimeType' => 'application/json']]),
-                'timeout' => 60
+                'timeout' => 90
             ]);
             
             if (is_wp_error($response)) {

@@ -33,11 +33,13 @@ class CA_Admin {
             
             wp_clear_scheduled_hook('ca_process_discovery_queue');
             wp_clear_scheduled_hook('ca_process_fetch_queue');
+            wp_clear_scheduled_hook('ca_process_clustering_queue');
             wp_clear_scheduled_hook('ca_process_generation_queue');
             
             if ($_POST['ca_engine_status'] == 'running') {
                 wp_schedule_event(time(), 'ca_custom_interval', 'ca_process_discovery_queue');
                 wp_schedule_event(time(), 'ca_custom_interval', 'ca_process_fetch_queue');
+                wp_schedule_event(time(), 'ca_custom_interval', 'ca_process_clustering_queue');
                 wp_schedule_event(time(), 'ca_custom_interval', 'ca_process_generation_queue');
             }
             
@@ -86,7 +88,7 @@ class CA_Admin {
     private function render_overview() {
         global $wpdb;
         $total_sources = $wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->prefix}ca_sources");
-        $pending_urls = $wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->prefix}ca_urls WHERE status IN ('pending', 'fetch_failed', 'ready_for_ai', 'ai_failed') AND retry_count < 3");
+        $pending_urls = $wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->prefix}ca_urls WHERE status IN ('pending', 'fetch_failed', 'ready_for_clustering', 'clustered', 'ai_failed') AND retry_count < 3");
         $generated = $wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->prefix}ca_urls WHERE status = 'draft_created'");
         $status = get_option('ca_engine_status', 'running');
         $color = $status == 'running' ? '#10b981' : '#ef4444';
@@ -176,10 +178,10 @@ class CA_Admin {
         echo '<h2>URL History & Archive</h2>';
         echo '<p>This is a complete record of all discovered URLs. The engine permanently remembers these to prevent duplicate articles from ever being generated again.</p>';
         echo '<table class="wp-list-table widefat fixed striped">';
-        echo '<thead><tr><th>Article URL</th><th>Processing Status</th><th>Retries</th><th>Generated WP Post</th></tr></thead><tbody>';
+        echo '<thead><tr><th>Article URL</th><th>Cluster ID</th><th>Processing Status</th><th>Retries</th><th>Generated WP Post</th></tr></thead><tbody>';
         
         if (empty($drafts)) {
-            echo '<tr><td colspan="4">No articles processed yet.</td></tr>';
+            echo '<tr><td colspan="5">No articles processed yet.</td></tr>';
         } else {
             foreach($drafts as $d) {
                 $status = strtoupper($d->status);
@@ -191,6 +193,7 @@ class CA_Admin {
                 }
                 echo "<tr>
                     <td><a href='" . esc_url($d->url) . "' target='_blank'>" . esc_html($d->url) . "</a></td>
+                    <td>" . esc_html($d->cluster_id) . "</td>
                     <td><strong>{$status}</strong></td>
                     <td>{$d->retry_count}</td>
                     <td>{$post_link}</td>

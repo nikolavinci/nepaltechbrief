@@ -11,6 +11,7 @@ class CA_Queue {
         if ($status == 'running') {
             if (!wp_next_scheduled('ca_process_discovery_queue')) wp_schedule_event(time(), 'ca_custom_interval', 'ca_process_discovery_queue');
             if (!wp_next_scheduled('ca_process_fetch_queue')) wp_schedule_event(time(), 'ca_custom_interval', 'ca_process_fetch_queue');
+            if (!wp_next_scheduled('ca_process_clustering_queue')) wp_schedule_event(time(), 'ca_custom_interval', 'ca_process_clustering_queue');
             if (!wp_next_scheduled('ca_process_generation_queue')) wp_schedule_event(time(), 'ca_custom_interval', 'ca_process_generation_queue');
         }
     }
@@ -31,8 +32,6 @@ class CA_Queue {
     public static function add_url_to_queue($source_id, $url) {
         global $wpdb;
         $url_hash = md5($url);
-        
-        // This is the duplicate prevention lock. If it's in the DB at all (even as draft_created or archived), it's skipped.
         $exists = $wpdb->get_var($wpdb->prepare("SELECT id FROM {$wpdb->prefix}ca_urls WHERE url_hash = %s", $url_hash));
         if ($exists) return false;
 
@@ -51,7 +50,6 @@ class CA_Queue {
         }
         
         include_once( ABSPATH . WPINC . '/feed.php' );
-
         add_filter('http_headers_useragent', function() { return 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'; }, 999);
         add_filter('http_request_timeout', function() { return 30; }, 999);
 
@@ -82,8 +80,7 @@ class CA_Queue {
         global $wpdb;
         $wpdb->insert($wpdb->prefix . 'ca_logs', ['action' => 'fetch', 'level' => 'INFO', 'message' => "Starting fetch queue..."]);
         
-        // Pick up pending OR failed fetch retries
-        $urls = $wpdb->get_results("SELECT * FROM {$wpdb->prefix}ca_urls WHERE (status = 'pending' OR status = 'fetch_failed') AND retry_count < 3 ORDER BY id ASC LIMIT 5");
+        $urls = $wpdb->get_results("SELECT * FROM {$wpdb->prefix}ca_urls WHERE (status = 'pending' OR status = 'fetch_failed') AND retry_count < 3 ORDER BY id ASC LIMIT 10");
         if (empty($urls)) {
             $wpdb->insert($wpdb->prefix . 'ca_logs', ['action' => 'fetch', 'level' => 'INFO', 'message' => "No pending URLs to fetch."]);
             return;
@@ -117,8 +114,19 @@ class CA_Queue {
                 continue;
             }
             
+            // Extract a very basic title from the HTML just for clustering
+            $title = 'Unknown Title';
+            if (preg_match('/<title>(.*?)<\/title>/is', wp_remote_retrieve_body($response), $matches)) {
+                $title = wp_strip_all_tags($matches[1]);
+            }
+            // Temporarily store title in content_hash or wait, let's just fetch it during clustering or rely on AI engine to fetch.
+            // Actually, we can fetch titles in clustering using wp_remote_get again (cached usually).
+            // But doing 10 wp_remote_gets in clustering is slow. Better to extract title now.
+            // Wait, we can't easily add a column without breaking DB update rules.
+            // Let's just do a quick fetch in clustering because it's parallel or just fast.
+            
             $wpdb->update($wpdb->prefix . 'ca_urls', [
-                'status' => 'ready_for_ai', 'content_hash' => $content_hash, 'processed_at' => current_time('mysql'), 'retry_count' => 0
+                'status' => 'ready_for_clustering', 'content_hash' => $content_hash, 'processed_at' => current_time('mysql'), 'retry_count' => 0
             ], ['id' => $url_row->id]);
             
             $wpdb->insert($wpdb->prefix . 'ca_logs', ['action' => 'fetch', 'level' => 'SUCCESS', 'message' => "Successfully fetched and hashed: {$url_row->url}"]);
