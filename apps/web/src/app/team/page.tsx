@@ -37,7 +37,7 @@ export default async function TeamPage({ params }: { params: Promise<{ lang: str
   };
 
   return (
-    <div className="container mx-auto px-4 py-12 max-w-6xl min-h-[60vh]">
+    <div className="container mx-auto px-6 sm:px-8 xl:px-4 py-12 max-w-6xl min-h-[60vh]">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       <header className="mb-12 border-b-2 border-primary pb-4 text-center">
         <h1 className="text-4xl font-extrabold uppercase text-primary">
@@ -86,4 +86,5 @@ export default async function TeamPage({ params }: { params: Promise<{ lang: str
     </div>
   );
 }
+
 

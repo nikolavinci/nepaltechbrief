@@ -152,7 +152,7 @@ export default async function NewsArticlePage({ params }: { params: Promise<{ sl
   const authorDesc = article.author?.description || `${authorName} प्रविधि र डिजिटल अर्थतन्त्रमा विशेषज्ञता हासिल गरेका एक अनुभवी पत्रकार हुन्। उनले पछिल्लो समयमा नेपालको स्टार्टअप इकोसिस्टम र प्रविधि क्षेत्रमा भइरहेका परिवर्तनहरूलाई नजिकबाट नियालिरहेका छन्।`;
 
   return (
-    <div className="container mx-auto px-4 py-8 xl:py-12 max-w-7xl">
+    <div className="container mx-auto px-6 sm:px-8 xl:px-4 py-8 xl:py-12 max-w-7xl">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
@@ -330,6 +330,7 @@ export default async function NewsArticlePage({ params }: { params: Promise<{ sl
     </div>
   );
 }
+
 
 
 

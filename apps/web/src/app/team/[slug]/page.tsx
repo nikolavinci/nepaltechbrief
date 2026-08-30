@@ -104,7 +104,7 @@ export default async function EntityProfilePage({ params }: { params: Promise<{ 
   };
 
   return (
-    <div className="container mx-auto px-4 py-12 max-w-5xl">
+    <div className="container mx-auto px-6 sm:px-8 xl:px-4 py-12 max-w-5xl">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       
       <div className="grid grid-cols-1 md:grid-cols-12 gap-10">
@@ -224,4 +224,5 @@ export default async function EntityProfilePage({ params }: { params: Promise<{ 
     </div>
   );
 }
+
 

@@ -1,4 +1,4 @@
-import Link from 'next/link';
+﻿import Link from 'next/link';
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { WebStories } from "@/components/home/WebStories";
@@ -39,7 +39,7 @@ export default async function HomePage() {
   };
 
   return (
-    <div className="container max-w-[1400px] mx-auto px-4 py-6">
+    <div className="container max-w-[1400px] mx-auto px-6 sm:px-8 xl:px-4 py-6">
 
       
       {/* Main Orchestration Grid */}
@@ -313,4 +313,5 @@ export default async function HomePage() {
     </div>
   );
 }
+
 

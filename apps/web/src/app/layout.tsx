@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+﻿import type { Metadata } from "next";
 import { Inter, Noto_Sans_Devanagari, Mukta } from "next/font/google";
 import "./globals.css";
 import { Header } from "@/components/layout/Header";
@@ -65,13 +65,13 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <Header />
-          <div className="container max-w-[1400px] mx-auto px-4 py-4">
+          <div className="container max-w-[1400px] mx-auto px-6 sm:px-8 xl:px-4 py-4">
             <AdBannerTop />
           </div>
           <main className="flex-grow">
             {children}
           </main>
-          <div className="container max-w-[1400px] mx-auto px-4 py-4">
+          <div className="container max-w-[1400px] mx-auto px-6 sm:px-8 xl:px-4 py-4">
             <AdBannerBottom />
           </div>
           <Footer />
@@ -80,4 +80,5 @@ export default function RootLayout({
     </html>
   );
 }
+
 
