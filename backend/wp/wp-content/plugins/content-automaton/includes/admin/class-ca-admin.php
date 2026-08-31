@@ -49,12 +49,14 @@ class CA_Admin {
             wp_clear_scheduled_hook('ca_process_fetch_queue');
             wp_clear_scheduled_hook('ca_process_clustering_queue');
             wp_clear_scheduled_hook('ca_process_generation_queue');
+            wp_clear_scheduled_hook('ca_process_image_queue');
             
             if ($_POST['ca_engine_status'] == 'running') {
                 wp_schedule_event(time(), 'ca_custom_interval', 'ca_process_discovery_queue');
                 wp_schedule_event(time(), 'ca_custom_interval', 'ca_process_fetch_queue');
                 wp_schedule_event(time(), 'ca_custom_interval', 'ca_process_clustering_queue');
                 wp_schedule_event(time(), 'ca_custom_interval', 'ca_process_generation_queue');
+                wp_schedule_event(time(), 'ca_custom_interval', 'ca_process_image_queue');
             }
             
             echo '<div class="notice notice-success"><p>Settings Saved & Engine Updated!</p></div>';
@@ -105,7 +107,7 @@ class CA_Admin {
         global $wpdb;
         $total_sources = $wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->prefix}ca_sources");
         $pending_urls = $wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->prefix}ca_urls WHERE status IN ('pending', 'fetch_failed', 'ready_for_clustering', 'clustered', 'ai_failed') AND retry_count < 3");
-        $generated = $wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->prefix}ca_urls WHERE status = 'draft_created'");
+        $generated = $wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->prefix}ca_urls WHERE status IN ('draft_created', 'completed')");
         $status = get_option('ca_engine_status', 'running');
         $color = $status == 'running' ? '#10b981' : '#ef4444';
         

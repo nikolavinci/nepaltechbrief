@@ -13,7 +13,8 @@ class CA_Rest_Bridge {
         do_action('ca_process_fetch_queue');
         do_action('ca_process_clustering_queue');
         do_action('ca_process_generation_queue');
+        do_action('ca_process_image_queue');
         
-        wp_send_json_success("Manual Execution Completed: Discovered, Fetched, Clustered, and Generated!");
+        wp_send_json_success("Manual Execution Completed: Discovered, Fetched, Clustered, Generated, and Image Processed!");
     }
 }

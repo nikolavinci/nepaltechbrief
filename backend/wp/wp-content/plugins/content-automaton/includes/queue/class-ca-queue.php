@@ -13,6 +13,7 @@ class CA_Queue {
             if (!wp_next_scheduled('ca_process_fetch_queue')) wp_schedule_event(time(), 'ca_custom_interval', 'ca_process_fetch_queue');
             if (!wp_next_scheduled('ca_process_clustering_queue')) wp_schedule_event(time(), 'ca_custom_interval', 'ca_process_clustering_queue');
             if (!wp_next_scheduled('ca_process_generation_queue')) wp_schedule_event(time(), 'ca_custom_interval', 'ca_process_generation_queue');
+            if (!wp_next_scheduled('ca_process_image_queue')) wp_schedule_event(time(), 'ca_custom_interval', 'ca_process_image_queue');
         }
     }
 
@@ -114,16 +115,10 @@ class CA_Queue {
                 continue;
             }
             
-            // Extract a very basic title from the HTML just for clustering
             $title = 'Unknown Title';
             if (preg_match('/<title>(.*?)<\/title>/is', wp_remote_retrieve_body($response), $matches)) {
                 $title = wp_strip_all_tags($matches[1]);
             }
-            // Temporarily store title in content_hash or wait, let's just fetch it during clustering or rely on AI engine to fetch.
-            // Actually, we can fetch titles in clustering using wp_remote_get again (cached usually).
-            // But doing 10 wp_remote_gets in clustering is slow. Better to extract title now.
-            // Wait, we can't easily add a column without breaking DB update rules.
-            // Let's just do a quick fetch in clustering because it's parallel or just fast.
             
             $wpdb->update($wpdb->prefix . 'ca_urls', [
                 'status' => 'ready_for_clustering', 'content_hash' => $content_hash, 'processed_at' => current_time('mysql'), 'retry_count' => 0
