@@ -36,13 +36,13 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
       type: 'article',
       publishedTime: article.published_at || article.created_at,
       authors: [article.author?.name || 'NepTechBrief Editor'],
-      images: [featuredImage],
+      images: featuredImage ? [featuredImage] : [],
     },
     twitter: {
       card: 'summary_large_image',
       title,
       description,
-      images: [featuredImage],
+      images: featuredImage ? [featuredImage] : [],
     },
     robots: {
       index: true,
@@ -84,7 +84,7 @@ export default async function NewsArticlePage({ params }: { params: Promise<{ sl
         : (process.env.NODE_ENV === 'development' 
             ? `${process.env.NEXT_PUBLIC_API_URL?.replace('/api', '')}${article.featured_image}` 
             : `/nepaltechbrief${article.featured_image}`))
-    : 'https://images.unsplash.com/photo-1550751827-4bd374c3f58b?q=80&w=2000&auto=format&fit=crop';
+    : null;
 
   const jsonLd = {
     '@context': 'https://schema.org',
@@ -94,7 +94,7 @@ export default async function NewsArticlePage({ params }: { params: Promise<{ sl
       '@id': `https://neptechbrief.com/news/${slug}`
     },
     headline: article.title_np || article.title_en,
-    image: [featuredImage],
+    image: featuredImage ? [featuredImage] : [],
     datePublished: article.published_at || article.created_at,
     dateModified: article.updated_at || article.created_at,
     author: [{
@@ -195,18 +195,20 @@ export default async function NewsArticlePage({ params }: { params: Promise<{ sl
       <DynamicAd position="ad_below_title_2" />
 
       {/* Featured Image */}
-      <figure className="mb-12">
-        <div className="w-full aspect-video bg-muted rounded-lg overflow-hidden relative">
-          <Image 
-            src={featuredImage} 
-            alt="Featured Image" 
-            fill
-            sizes="(max-width: 1024px) 100vw, 800px"
-            priority
-            className="object-cover"
-          />
-        </div>
-      </figure>
+      {featuredImage && (
+        <figure className="mb-12">
+          <div className="w-full aspect-video bg-muted rounded-lg overflow-hidden relative">
+            <Image 
+              src={featuredImage} 
+              alt="Featured Image" 
+              fill
+              sizes="(max-width: 1024px) 100vw, 800px"
+              priority
+              className="object-cover"
+            />
+          </div>
+        </figure>
+      )}
 
       {/* Article Body */}
       <article className="prose dark:prose-invert prose-headings:font-heading prose-a:text-primary max-w-none tracking-wide text-foreground/90 text-justify text-[18px] sm:text-[19px] md:text-[20px] leading-[1.9] prose-p:text-justify prose-p:text-[18px] sm:prose-p:text-[19px] md:prose-p:text-[20px] prose-p:leading-[1.9]">

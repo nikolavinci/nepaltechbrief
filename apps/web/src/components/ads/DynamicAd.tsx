@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useEffect, useState, useRef } from "react";
 
@@ -57,25 +57,7 @@ export function DynamicAd({ position }: { position: "top" | "bottom" | "between_
     }
   }, [ad]);
 
-  if (loading) {
-    // Preserve space to prevent Cumulative Layout Shift (CLS)
-    const minHeights: Record<string, string> = {
-      top: 'min-h-[130px]',
-      bottom: 'min-h-[130px]',
-      between_sections: 'min-h-[130px]',
-      sidebar: 'min-h-[300px]',
-      article_mid: 'min-h-[130px]',
-      ad_below_title_1: 'min-h-[130px]',
-      ad_below_title_2: 'min-h-[130px]',
-      ad_below_featured_1: 'min-h-[130px]',
-      ad_below_featured_2: 'min-h-[130px]',
-      ad_mid_1: 'min-h-[250px]',
-      ad_mid_2: 'min-h-[250px]',
-      ad_bottom_1: 'min-h-[130px]',
-      ad_bottom_2: 'min-h-[130px]'
-    };
-    return <div className={`w-full bg-muted/20 animate-pulse rounded-2xl ${minHeights[position] || 'min-h-[130px]'} my-4`} />;
-  }
+  if (loading) return null;
 
   if (!ad) return null; // Ad position disabled or no ads exist
 

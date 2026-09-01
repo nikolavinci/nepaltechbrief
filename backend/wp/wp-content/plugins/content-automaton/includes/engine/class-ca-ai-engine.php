@@ -25,7 +25,7 @@ class CA_AI_Engine {
         $internal_links_context = "";
         foreach ($recent_posts as $rp) {
             // Fix API domain for internal links (ensure it points to frontend neptechbrief.com)
-            $frontend_link = str_replace('api.neptechbrief.com', 'neptechbrief.com', get_permalink($rp->ID));
+            $frontend_link = 'https://neptechbrief.com/news/' . $rp->post_name;
             $internal_links_context .= "- " . esc_html($rp->post_title) . " (URL: " . $frontend_link . ")\n";
         }
         
