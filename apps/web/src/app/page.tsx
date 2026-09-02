@@ -1,4 +1,5 @@
 ﻿import Link from 'next/link';
+import Image from 'next/image';
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { WebStories } from "@/components/home/WebStories";
@@ -51,7 +52,7 @@ export default async function HomePage() {
           {mainLead ? (
             <Link href={`/news/${mainLead.slug}`} className="group">
               <div className="aspect-square md:aspect-[21/9] bg-muted overflow-hidden relative border-b-4 border-primary">
-                <img 
+                <Image fill sizes="(max-width: 768px) 100vw, 50vw" 
                   src={getImageUrl(mainLead)} 
                   alt={getTitle(mainLead)} 
                   className="object-cover w-full h-full group-hover:scale-105 group-hover:blur-sm transition-all duration-700 bg-muted"
@@ -77,8 +78,8 @@ export default async function HomePage() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-4">
             {subLeads.map((item: any, idx: number) => (
               <Link href={`/news/${item.slug}`} key={idx} className="group flex flex-col gap-3">
-                <div className="aspect-video bg-muted overflow-hidden rounded">
-                  <img 
+                <div className="aspect-video bg-muted overflow-hidden rounded relative">
+                  <Image fill sizes="(max-width: 768px) 100vw, 50vw" 
                     src={getImageUrl(item)} 
                     alt={getTitle(item)} 
                     className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-500 bg-muted"
@@ -139,7 +140,7 @@ export default async function HomePage() {
           {editorsPicks.map((item: any, idx: number) => (
             <Link href={`/news/${item.slug}`} key={idx} className="group flex flex-col gap-4 bg-card p-4 rounded-xl shadow-sm border border-border/50 hover:border-primary/40 hover:shadow-md transition-all">
               <div className="w-full aspect-[4/3] bg-muted rounded overflow-hidden relative">
-                <img 
+                <Image fill sizes="(max-width: 768px) 100vw, 50vw" 
                   src={getImageUrl(item)} 
                   alt={getTitle(item)} 
                   className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-500"
@@ -181,8 +182,8 @@ export default async function HomePage() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {(appsNews.length > 0 ? appsNews : articles.slice(10, 13)).slice(0, 3).map((item: any, idx: number) => (
               <Link href={item ? `/news/${item.slug}` : '#'} key={idx} className="group flex flex-col gap-3">
-                <div className="aspect-video bg-muted overflow-hidden rounded">
-                  <img 
+                <div className="aspect-video bg-muted overflow-hidden rounded relative">
+                  <Image fill sizes="(max-width: 768px) 100vw, 50vw" 
                     src={getImageUrl(item)} 
                     alt={getTitle(item)} 
                     className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-500"
@@ -218,7 +219,7 @@ export default async function HomePage() {
               <CardContent className="p-4 flex flex-col h-full">
                 <Link href={item ? `/news/${item.slug}` : '#'} className="flex flex-col h-full">
                   <div className="aspect-video bg-muted overflow-hidden mb-4 rounded relative">
-                    <img 
+                    <Image fill sizes="(max-width: 768px) 100vw, 50vw" 
                       src={getImageUrl(item)} 
                       alt={getTitle(item)} 
                       className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-500"
@@ -252,8 +253,8 @@ export default async function HomePage() {
           <div className="flex flex-col gap-6">
             {(telecomNews.length > 0 ? telecomNews : articles.slice(5, 9)).slice(0, 4).map((item: any, idx: number) => (
               <Link href={item ? `/news/${item.slug}` : '#'} key={idx} className="group flex gap-4 bg-card p-3 rounded-lg border border-border/40 hover:border-purple-600/30 hover:shadow-sm transition-all">
-                <div className="w-1/3 aspect-video bg-muted overflow-hidden flex-shrink-0 rounded">
-                  <img src={getImageUrl(item)} alt="Telecom Mini" className="object-cover w-full h-full group-hover:scale-105 transition-transform" />
+                <div className="w-1/3 aspect-video bg-muted overflow-hidden flex-shrink-0 rounded relative">
+                  <Image fill sizes="(max-width: 768px) 100vw, 50vw" src={getImageUrl(item)} alt="Telecom Mini" className="object-cover w-full h-full group-hover:scale-105 transition-transform" />
                 </div>
                 <div className="flex flex-col justify-center">
                   <h4 className="font-bold font-heading leading-snug group-hover:text-purple-600 transition-colors line-clamp-3">
@@ -283,8 +284,8 @@ export default async function HomePage() {
           <div className="flex flex-col gap-6">
             {(startupNews.length > 0 ? startupNews : articles.slice(10, 14)).slice(0, 4).map((item: any, idx: number) => (
               <Link href={item ? `/news/${item.slug}` : '#'} key={idx} className="group flex gap-4 bg-card p-3 rounded-lg border border-border/40 hover:border-emerald-600/30 hover:shadow-sm transition-all">
-                <div className="w-1/3 aspect-video bg-muted overflow-hidden flex-shrink-0 rounded">
-                  <img src={getImageUrl(item)} alt="Startup Mini" className="object-cover w-full h-full group-hover:scale-105 transition-transform" />
+                <div className="w-1/3 aspect-video bg-muted overflow-hidden flex-shrink-0 rounded relative">
+                  <Image fill sizes="(max-width: 768px) 100vw, 50vw" src={getImageUrl(item)} alt="Startup Mini" className="object-cover w-full h-full group-hover:scale-105 transition-transform" />
                 </div>
                 <div className="flex flex-col justify-center">
                   <h4 className="font-bold font-heading leading-snug group-hover:text-emerald-600 transition-colors line-clamp-3">

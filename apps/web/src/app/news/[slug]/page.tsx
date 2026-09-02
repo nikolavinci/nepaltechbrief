@@ -1,10 +1,24 @@
-﻿import { notFound } from 'next/navigation';
+import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import { fetchArticle, fetchArticles } from '@/lib/api';
 import { AdBannerSidebar } from '@/components/ads/AdBannerSidebar';
 import { DynamicAd } from '@/components/ads/DynamicAd';
 import type { Metadata } from 'next';
+import { YouTubeEmbed } from '@next/third-parties/google';
+
+function parseHtmlWithYouTube(html: string) {
+  const parts = html.split(/(<iframe[^>]*src="[^"]*youtube\.com\/embed\/[^"]*"[^>]*>.*?<\/iframe>)/gi);
+  return parts.map((part, index) => {
+    if (part.toLowerCase().startsWith('<iframe')) {
+      const match = part.match(/src="[^"]*youtube\.com\/embed\/([^"?]+)/i);
+      if (match && match[1]) {
+        return <YouTubeEmbed key={index} videoid={match[1]} />;
+      }
+    }
+    return <div key={index} dangerouslySetInnerHTML={{ __html: part }} />;
+  });
+}
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
@@ -212,9 +226,9 @@ export default async function NewsArticlePage({ params }: { params: Promise<{ sl
 
       {/* Article Body */}
       <article className="prose dark:prose-invert prose-headings:font-heading prose-a:text-primary max-w-none tracking-wide text-foreground/90 text-justify text-[18px] sm:text-[19px] md:text-[20px] leading-[1.9] prose-p:text-justify prose-p:text-[18px] sm:prose-p:text-[19px] md:prose-p:text-[20px] prose-p:leading-[1.9]">
-        <div dangerouslySetInnerHTML={{ __html: firstHalf }} />
+        {parseHtmlWithYouTube(firstHalf)}
         <DynamicAd position="article_mid" />
-        <div dangerouslySetInnerHTML={{ __html: secondHalf }} />
+        {parseHtmlWithYouTube(secondHalf)}
       </article>
         {/* Author Bio Box */}
         <div className="my-12 p-6 md:p-8 bg-muted/30 border border-border/50 rounded-2xl flex flex-col md:flex-row gap-6 items-center md:items-start transition-colors hover:border-primary/30 group/bio">
