@@ -193,7 +193,8 @@ export async function fetchArticlesByAuthor(authorId: number, page: number = 1, 
 
 export async function fetchTeamMembers() {
   try {
-    const res = await fetch((process.env.NEXT_PUBLIC_API_URL || "https://api.neptechbrief.com/wp-json/wp/v2") + '/neptech_team_member?per_page=100&orderby=menu_order&order=asc', {
+    const baseUrl = (process.env.NEXT_PUBLIC_API_URL || "https://api.neptechbrief.com/wp-json/wp/v2").replace('/wp/v2', '');
+    const res = await fetch(baseUrl + '/neptech/v1/team', {
       next: { revalidate: 60 }
     });
     if (!res.ok) return [];
