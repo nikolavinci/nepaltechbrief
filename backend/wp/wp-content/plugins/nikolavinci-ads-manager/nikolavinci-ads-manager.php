@@ -1,6 +1,6 @@
 <?php
 /**
- * Plugin Name: Content Automaton Ads Manager
+ * Plugin Name: Ads Manager
  * Plugin URI: https://nikolavinci.com
  * Description: Advanced ad management. Third-party support (AdSense/Ezoic), UI analytics, position toggles, and responsive ad slots.
  * Version: 2.4.0

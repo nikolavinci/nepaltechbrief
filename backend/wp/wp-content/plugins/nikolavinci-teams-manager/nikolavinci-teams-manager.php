@@ -1,9 +1,11 @@
 <?php
 /*
-Plugin Name: NepTechBrief Teams & Entity Manager
+Plugin Name: Teams
+Plugin URI: https://nikolavinci.com
 Description: Advanced Entity Home & Teams Manager. Creates dedicated Person entities with comprehensive Schema.org JSON-LD support for AEO, GEO, and AI search optimization.
 Version: 3.0.1
-Author: NikolaVinci
+Author: nikolavinci
+Author URI: https://nikolavinci.com
 */
 
 if (!defined('ABSPATH')) exit;
