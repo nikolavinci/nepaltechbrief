@@ -67,7 +67,7 @@ export function Footer() {
       {/* Bottom Bar */}
       <div className="max-w-[1400px] mx-auto px-4 mt-16 pt-8 border-t border-zinc-800 flex flex-col md:flex-row items-center justify-between gap-4 text-xs text-zinc-500">
         <p>© {currentYear} NepTechBrief. सर्वाधिकार सुरक्षित।</p>
-        <p>परिशुद्धताका साथ डिजाइन र विकास गरिएको।</p>
+        <p>Theme by <a href="https://nikolavinci.com" target="_blank" rel="noopener noreferrer" className="text-zinc-400 hover:text-white transition-colors underline underline-offset-2">NikolaVinci</a></p>
       </div>
     </footer>
   );
