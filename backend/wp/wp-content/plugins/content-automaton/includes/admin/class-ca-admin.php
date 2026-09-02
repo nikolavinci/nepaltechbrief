@@ -56,7 +56,8 @@ class CA_Admin {
                 wp_schedule_event(time(), 'ca_custom_interval', 'ca_process_fetch_queue');
                 wp_schedule_event(time(), 'ca_custom_interval', 'ca_process_clustering_queue');
                 wp_schedule_event(time(), 'ca_custom_interval', 'ca_process_generation_queue');
-                wp_schedule_event(time(), 'ca_custom_interval', 'ca_process_image_queue');
+                // Image generation disabled per user request
+                // wp_schedule_event(time(), 'ca_custom_interval', 'ca_process_image_queue');
             }
             
             echo '<div class="notice notice-success"><p>Settings Saved & Engine Updated!</p></div>';
@@ -227,10 +228,24 @@ class CA_Admin {
 
     private function render_archive() {
         global $wpdb;
-        $drafts = $wpdb->get_results("SELECT * FROM {$wpdb->prefix}ca_urls ORDER BY id DESC LIMIT 100");
+        
+        $where = ["1=1"];
+        if (!empty($_GET['archive_status'])) $where[] = $wpdb->prepare("status = %s", sanitize_text_field($_GET['archive_status']));
+        
+        $where_clause = implode(' AND ', $where);
+        $drafts = $wpdb->get_results("SELECT * FROM {$wpdb->prefix}ca_urls WHERE {$where_clause} ORDER BY id DESC LIMIT 500");
         
         echo '<h2>URL History & Archive</h2>';
         echo '<p>This is a complete record of all discovered URLs. The engine permanently remembers these to prevent duplicate articles from ever being generated again.</p>';
+        
+        echo '<form method="get" style="margin-bottom: 20px;">';
+        echo '<input type="hidden" name="page" value="content-automaton">';
+        echo '<input type="hidden" name="tab" value="archive">';
+        echo '<select name="archive_status" style="margin-right:10px;"><option value="">All Statuses</option><option value="completed" ' . (isset($_GET['archive_status']) && $_GET['archive_status'] == 'completed' ? 'selected' : '') . '>Completed</option><option value="draft_created" ' . (isset($_GET['archive_status']) && $_GET['archive_status'] == 'draft_created' ? 'selected' : '') . '>Draft Created</option><option value="pending" ' . (isset($_GET['archive_status']) && $_GET['archive_status'] == 'pending' ? 'selected' : '') . '>Pending</option><option value="dead" ' . (isset($_GET['archive_status']) && $_GET['archive_status'] == 'dead' ? 'selected' : '') . '>Dead</option><option value="duplicate" ' . (isset($_GET['archive_status']) && $_GET['archive_status'] == 'duplicate' ? 'selected' : '') . '>Duplicate</option></select>';
+        echo '<button type="submit" class="button">Filter</button>';
+        echo ' <a href="?page=content-automaton&tab=archive" class="button">Clear</a>';
+        echo '</form>';
+        
         echo '<table class="wp-list-table widefat fixed striped">';
         echo '<thead><tr><th>Discovered Date/Time</th><th>Article URL</th><th>Cluster ID</th><th>Processing Status</th><th>Retries</th><th>Generated WP Post</th></tr></thead><tbody>';
         
@@ -275,9 +290,27 @@ class CA_Admin {
     
     private function render_logs() {
         global $wpdb;
-        $logs = $wpdb->get_results("SELECT * FROM {$wpdb->prefix}ca_logs ORDER BY id DESC LIMIT 100");
+        
+        $where = ["1=1"];
+        if (!empty($_GET['log_level'])) $where[] = $wpdb->prepare("level = %s", sanitize_text_field($_GET['log_level']));
+        if (!empty($_GET['log_action'])) $where[] = $wpdb->prepare("action = %s", sanitize_text_field($_GET['log_action']));
+        if (!empty($_GET['log_date'])) $where[] = $wpdb->prepare("DATE(time) = %s", sanitize_text_field($_GET['log_date']));
+        
+        $where_clause = implode(' AND ', $where);
+        $logs = $wpdb->get_results("SELECT * FROM {$wpdb->prefix}ca_logs WHERE {$where_clause} ORDER BY id DESC LIMIT 500");
         
         echo '<h2>System & Error Logs</h2>';
+        
+        echo '<form method="get" style="margin-bottom: 20px;">';
+        echo '<input type="hidden" name="page" value="content-automaton">';
+        echo '<input type="hidden" name="tab" value="logs">';
+        echo '<select name="log_level" style="margin-right:10px;"><option value="">All Levels</option><option value="INFO" ' . (isset($_GET['log_level']) && $_GET['log_level'] == 'INFO' ? 'selected' : '') . '>INFO</option><option value="SUCCESS" ' . (isset($_GET['log_level']) && $_GET['log_level'] == 'SUCCESS' ? 'selected' : '') . '>SUCCESS</option><option value="ERROR" ' . (isset($_GET['log_level']) && $_GET['log_level'] == 'ERROR' ? 'selected' : '') . '>ERROR</option><option value="WARNING" ' . (isset($_GET['log_level']) && $_GET['log_level'] == 'WARNING' ? 'selected' : '') . '>WARNING</option></select>';
+        echo '<select name="log_action" style="margin-right:10px;"><option value="">All Actions</option><option value="DISCOVERY" ' . (isset($_GET['log_action']) && $_GET['log_action'] == 'DISCOVERY' ? 'selected' : '') . '>DISCOVERY</option><option value="FETCH" ' . (isset($_GET['log_action']) && $_GET['log_action'] == 'FETCH' ? 'selected' : '') . '>FETCH</option><option value="CLUSTERING" ' . (isset($_GET['log_action']) && $_GET['log_action'] == 'CLUSTERING' ? 'selected' : '') . '>CLUSTERING</option><option value="GENERATION" ' . (isset($_GET['log_action']) && $_GET['log_action'] == 'GENERATION' ? 'selected' : '') . '>GENERATION</option></select>';
+        echo '<input type="date" name="log_date" value="' . (isset($_GET['log_date']) ? esc_attr($_GET['log_date']) : '') . '" style="margin-right:10px;">';
+        echo '<button type="submit" class="button">Filter Logs</button>';
+        echo ' <a href="?page=content-automaton&tab=logs" class="button">Clear</a>';
+        echo '</form>';
+        
         echo '<table class="wp-list-table widefat fixed striped">';
         echo '<thead><tr><th>Time</th><th>Level</th><th>Action</th><th>Message</th></tr></thead><tbody>';
         

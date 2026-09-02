@@ -8,13 +8,13 @@ class CA_Queue {
         add_action('ca_process_fetch_queue', [$this, 'process_fetch']);
         
         $status = get_option('ca_engine_status', 'running');
-        if ($status == 'running') {
+        add_action('init', function() {
             if (!wp_next_scheduled('ca_process_discovery_queue')) wp_schedule_event(time(), 'ca_custom_interval', 'ca_process_discovery_queue');
             if (!wp_next_scheduled('ca_process_fetch_queue')) wp_schedule_event(time(), 'ca_custom_interval', 'ca_process_fetch_queue');
             if (!wp_next_scheduled('ca_process_clustering_queue')) wp_schedule_event(time(), 'ca_custom_interval', 'ca_process_clustering_queue');
             if (!wp_next_scheduled('ca_process_generation_queue')) wp_schedule_event(time(), 'ca_custom_interval', 'ca_process_generation_queue');
-            if (!wp_next_scheduled('ca_process_image_queue')) wp_schedule_event(time(), 'ca_custom_interval', 'ca_process_image_queue');
-        }
+            // if (!wp_next_scheduled('ca_process_image_queue')) wp_schedule_event(time(), 'ca_custom_interval', 'ca_process_image_queue');
+        });
     }
 
     public function custom_cron_schedule($schedules) {

@@ -149,7 +149,7 @@ class CA_AI_Engine {
                 $original_urls = [];
                 foreach ($urls as $u) {
                     $original_urls[] = $u->url;
-                    $wpdb->update($wpdb->prefix . 'ca_urls', ['status' => 'draft_created', 'post_id' => $post_id], ['id' => $u->id]);
+                    $wpdb->update($wpdb->prefix . 'ca_urls', ['status' => 'completed', 'post_id' => $post_id], ['id' => $u->id]);
                 }
                 update_post_meta($post_id, 'ca_original_url', implode("\n", $original_urls));
                 
